@@ -1,0 +1,178 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { I18nContext, LANGS, VIDEOS_URL, initialLang, makeT, useT } from './i18n.js';
+import { RobotProvider, useRobot } from './useRobot.jsx';
+import { supportsBluetooth } from './robot.js';
+import { SURFACES } from './demo.js';
+import { WIZARDS } from './wizards.jsx';
+import { Icon } from './art.jsx';
+import { Notice, fmt } from './ui.jsx';
+import { FACTORY } from './python.js';
+
+const same = (a, b) => Array.isArray(a) && a.length === b.length && a.every((v, k) => v === b[k]);
+
+function Header() {
+  const t = useT();
+  const r = useRobot();
+  const { conn, mode, busy } = r;
+  const status = conn.status;
+  const label = { connected: t('conn.connected'), connecting: t('conn.connecting'), reconnect: t('conn.reconnect'), disconnected: t('conn.disconnected') }[status] || t('conn.disconnected');
+  return (
+    <div className="status">
+      <span className={`pill pill-${status}`}><i />{mode === 'demo' ? `${t('mode.demo')} · ` : ''}{label}</span>
+      {status === 'connected' && conn.device && <span className="muted small">{conn.device}</span>}
+      {status === 'connected' && r.tel.battery > 0 && <span className="muted small">{t('conn.battery')} {r.tel.battery.toFixed(2)} V</span>}
+      {busy && <button type="button" className="btn btn-danger" onClick={r.emergencyStop}>{t('stop')}</button>}
+      {mode === 'robot' && status !== 'connected' && (
+        <button type="button" className="btn btn-primary" onClick={r.connect} disabled={status === 'connecting' || !supportsBluetooth()}>{t('conn.connect')}</button>
+      )}
+      {mode === 'robot' && status === 'connected' && <button type="button" className="btn btn-ghost" onClick={r.disconnect}>{t('conn.disconnect')}</button>}
+      {mode === 'robot' && status !== 'connected' && <button type="button" className="btn btn-ghost" onClick={r.enterDemo}>{t('mode.demo')}</button>}
+      {mode === 'demo' && <button type="button" className="btn btn-ghost" onClick={r.leaveDemo}>{t('mode.leaveDemo')}</button>}
+    </div>
+  );
+}
+
+function DemoBar() {
+  const t = useT();
+  const { mode, surface, setSurface } = useRobot();
+  if (mode !== 'demo') return null;
+  return (
+    <div className="demobar">
+      <span>{t('mode.demoBanner')}</span>
+      <label>{t('mode.surface')}
+        <select value={surface} onChange={(e) => setSurface(e.target.value)}>
+          {Object.keys(SURFACES).map((k) => <option key={k} value={k}>{t(`surface.${k}`)}</option>)}
+        </select>
+      </label>
+    </div>
+  );
+}
+
+function Stored() {
+  const t = useT();
+  const { stored, ready, refresh, busy } = useRobot();
+  const rows = [
+    ['straight', 'val.straight', FACTORY.motors],
+    ['distance', 'val.distance', FACTORY.distance],
+    ['gyroOffsets', 'val.gyroOffsets', FACTORY.gyroOffsets],
+    ['gyroScale', 'val.gyroScale', FACTORY.gyroScale],
+    ['ground', 'val.ground', null],
+    ['color', 'val.color', null],
+  ];
+  const groundFactory = [FACTORY.groundBlack, FACTORY.groundBlack, FACTORY.groundWhite, FACTORY.groundWhite];
+  const show = (key, v) => {
+    if (v === undefined) return t('home.notRead');
+    if (key === 'ground') return `${v[0]} · ${v[1]}  /  ${v[2]} · ${v[3]}`;
+    if (key === 'color') return `${v.slice(0, 3).join(' · ')}  /  ${v.slice(3).join(' · ')}`;
+    return fmt(v);
+  };
+  return (
+    <section className="card stored">
+      <div className="card-head">
+        <h3>{t('home.stored')}</h3>
+        <button type="button" className="btn btn-ghost" onClick={refresh} disabled={!ready || busy}>{t('home.refresh')}</button>
+      </div>
+      <dl>
+        {rows.map(([key, label, factory]) => {
+          const v = stored?.[key];
+          const f = key === 'ground' ? groundFactory : factory;
+          const isFactory = v !== undefined && f && (Array.isArray(f) ? same(v, f) : v === f);
+          return (
+            <div className="kv" key={key}>
+              <dt>{t(label)}</dt>
+              <dd>{show(key, v)}{v !== undefined && f && <span className={`tag ${isFactory ? '' : 'tag-changed'}`}>{isFactory ? t('home.factory') : t('home.changed')}</span>}</dd>
+            </div>
+          );
+        })}
+      </dl>
+    </section>
+  );
+}
+
+function Home({ onOpen }) {
+  const t = useT();
+  const { ready, conn } = useRobot();
+  return (
+    <>
+      <p className="lead">{t('home.intro')}</p>
+      {!ready && <Notice tone="warn">{supportsBluetooth() ? t('home.connectFirst') : t('conn.noBluetooth')}</Notice>}
+      {conn.error && <Notice tone="danger">{conn.error}</Notice>}
+      <div className="cards">
+        {WIZARDS.map((w, k) => (
+          <button key={w.id} type="button" className="card card-wiz" onClick={() => onOpen(w.id)}>
+            <span className="card-num">{k + 1}</span>
+            <span className="card-icon"><Icon name={w.icon} /></span>
+            <span className="card-title">{t(w.titleKey)}</span>
+            <span className="card-desc">{t(w.descKey)}</span>
+            <span className="card-go">{t('home.start')} →</span>
+          </button>
+        ))}
+      </div>
+      <p className="muted small">{t('home.order')}</p>
+      <Stored />
+      <section className="card videos">
+        <div>
+          <h3>{t('home.videos')}</h3>
+          <p className="muted">{t('home.videosHint')}</p>
+        </div>
+        <a className="btn btn-ghost" href={VIDEOS_URL} target="_blank" rel="noreferrer">▶ {t('home.videos')}</a>
+      </section>
+    </>
+  );
+}
+
+function Shell() {
+  const t = useT();
+  const { error, clearError, busy } = useRobot();
+  const [view, setView] = useState('home');
+  const wiz = WIZARDS.find((w) => w.id === view);
+  return (
+    <div className="shell">
+      <DemoBar />
+      <main>
+        {busy && <div className="busy" role="status"><span className="spinner" />{t('busy')}</div>}
+        {error && (
+          <Notice tone="danger">
+            <b>{t('error.title')}</b> — {error}{' '}
+            <button type="button" className="link-btn" onClick={clearError}>{t('error.dismiss')}</button>
+          </Notice>
+        )}
+        {wiz ? <wiz.Comp key={wiz.id} onExit={() => setView('home')} /> : <Home onOpen={setView} />}
+      </main>
+      <footer className="muted small">{t('footer.credit')}</footer>
+    </div>
+  );
+}
+
+export default function App() {
+  const [lang, setLang] = useState(initialLang);
+  const t = useMemo(() => makeT(lang), [lang]);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.title = t('app.title');
+    try { localStorage.setItem('t3cal.lang', lang); } catch { /* storage unavailable */ }
+  }, [lang, t]);
+
+  return (
+    <I18nContext.Provider value={{ lang, t }}>
+      <RobotProvider>
+        <header className="top">
+          <div className="brand">
+            <div className="logo" aria-hidden="true" />
+            <div>
+              <h1>{t('app.title')}</h1>
+              <p className="muted small">{t('app.subtitle')}</p>
+            </div>
+          </div>
+          <Header />
+          <div className="langs" role="group" aria-label="Language">
+            {LANGS.map((l) => (
+              <button key={l.id} type="button" className={l.id === lang ? 'on' : ''} onClick={() => setLang(l.id)}>{l.label}</button>
+            ))}
+          </div>
+        </header>
+        <Shell />
+      </RobotProvider>
+    </I18nContext.Provider>
+  );
+}
