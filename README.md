@@ -5,12 +5,13 @@ reach by holding ◀ ▶ for 3 s). Each calibration is a short wizard with illus
 sensor readings and a **Save to robot** step that stores the values in the robot's flash,
 exactly where the on-robot menu stores them.
 
-**▶ Live demo (no robot needed): <https://francescomondada.github.io/thymio3-calibration/?demo>**
-· App: <https://francescomondada.github.io/thymio3-calibration/>
+**▶ App: <https://francescomondada.github.io/thymio3-calibration/>** — opens ready to connect to a robot.
+· **Live demo (no robot needed): <https://francescomondada.github.io/thymio3-calibration/?demo>**
 
-The demo runs against a *simulated* robot (slightly imperfect on purpose, so there is
-something to calibrate). Nothing is written to any real robot in demo mode. To use a real
-robot, open the app **without** `?demo` in **Google Chrome or Microsoft Edge** (Web Bluetooth is not
+The app starts **not** in demo mode: click *Connect robot* to pair a Thymio 3 (or *Demo mode*
+to try it without one). The demo runs against a *simulated* robot (slightly imperfect on purpose,
+so there is something to calibrate); nothing is written to any real robot in demo mode, and you can
+switch to a real robot at any time with *Connect robot*. To use a real robot, open the app in **Google Chrome or Microsoft Edge** (Web Bluetooth is not
 available in Firefox or Safari; the app shows a prominent warning there) and click *Connect robot*. The interface is available in French and English.
 
 ## The five wizards

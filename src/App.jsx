@@ -27,7 +27,12 @@ function Header() {
       )}
       {mode === 'robot' && status === 'connected' && <button type="button" className="btn btn-ghost" onClick={r.disconnect}>{t('conn.disconnect')}</button>}
       {mode === 'robot' && status !== 'connected' && <button type="button" className="btn btn-ghost" onClick={r.enterDemo}>{t('mode.demo')}</button>}
-      {mode === 'demo' && <button type="button" className="btn btn-ghost" onClick={r.leaveDemo}>{t('mode.leaveDemo')}</button>}
+      {mode === 'demo' && (
+        <>
+          <button type="button" className="btn btn-primary" onClick={r.connectFromDemo} disabled={!supportsBluetooth()}>{t('conn.connect')}</button>
+          <button type="button" className="btn btn-ghost" onClick={r.leaveDemo}>{t('mode.leaveDemo')}</button>
+        </>
+      )}
     </div>
   );
 }

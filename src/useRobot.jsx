@@ -16,6 +16,7 @@ export function RobotProvider({ children }) {
   const [error, setError] = useState('');
   const [surface, setSurfaceState] = useState('white');
   const backend = useRef(null);
+  const pendingConnect = useRef(false);            // connect as soon as the real backend is up (from the demo)
   const telTimer = useRef(0);
   const pendingTel = useRef(null);
 
@@ -38,7 +39,12 @@ export function RobotProvider({ children }) {
     backend.current = b;
     b.start();
     if (mode === 'demo') b.setSurface(surface);
+    // Deferred so a React StrictMode re-run of this effect doesn't connect twice.
+    const autoConnect = mode === 'robot' && pendingConnect.current
+      ? window.setTimeout(() => { pendingConnect.current = false; b.connect().catch(() => { /* reported through conn */ }); }, 0)
+      : 0;
     return () => {
+      window.clearTimeout(autoConnect);
       b.stop();
       window.clearTimeout(telTimer.current);
       telTimer.current = 0;
@@ -81,7 +87,16 @@ export function RobotProvider({ children }) {
   }, []);
 
   const enterDemo = useCallback(() => { setStored(null); setError(''); setConn({ status: 'disconnected' }); setMode('demo'); }, []);
-  const leaveDemo = useCallback(() => { setStored(null); setError(''); setConn({ status: 'disconnected' }); setMode('robot'); }, []);
+  const leaveDemo = useCallback(() => {
+    setStored(null); setError(''); setConn({ status: 'disconnected' }); setMode('robot');
+    try { // "?demo" must not bring the demo back on reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete('demo');
+      window.history.replaceState(null, '', url);
+    } catch { /* ignore */ }
+  }, []);
+  // From the demo: switch to the real robot and open the Bluetooth chooser right away.
+  const connectFromDemo = useCallback(() => { pendingConnect.current = true; leaveDemo(); }, [leaveDemo]);
   const setSurface = useCallback((s) => { setSurfaceState(s); backend.current?.setSurface?.(s); }, []);
   const emergencyStop = useCallback(() => backend.current?.emergencyStop?.(), []);
 
@@ -93,10 +108,10 @@ export function RobotProvider({ children }) {
 
   const value = useMemo(() => ({
     mode, conn, tel, stored, busy, error, surface, ready,
-    run, connect, disconnect, enterDemo, leaveDemo, setSurface, emergencyStop,
+    run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop,
     clearError: () => setError(''),
     refresh: () => run('readAll'),
-  }), [mode, conn, tel, stored, busy, error, surface, ready, run, connect, disconnect, enterDemo, leaveDemo, setSurface, emergencyStop]);
+  }), [mode, conn, tel, stored, busy, error, surface, ready, run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop]);
 
   return <RobotCtx.Provider value={value}>{children}</RobotCtx.Provider>;
 }
