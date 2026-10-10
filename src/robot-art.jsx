@@ -19,6 +19,8 @@ export const GROUND_Y = -46;         // IR ground sensors: two pairs of small wi
 export const GROUND_HOLES = [-13, -7, 7, 13]; // x of the four windows (one emitter + one receiver per side)
 
 const BODY = 'M-50,-18 C-50,-42 -28,-53.7 0,-53.7 C28,-53.7 50,-42 50,-18 L50,47 Q50,53.7 43,53.7 L-43,53.7 Q-50,53.7 -50,47 Z';
+// Lower shell: same D, but notched on both sides (x = ±29 … ±50, y = 7 … 47) so the wheels show.
+const BODY_BOTTOM = 'M-50,-18 C-50,-42 -28,-53.7 0,-53.7 C28,-53.7 50,-42 50,-18 L50,7 L29,7 L29,47 L50,47 Q50,53.7 43,53.7 L-43,53.7 Q-50,53.7 -50,47 L-29,47 L-29,7 L-50,7 Z';
 const arcY = (x) => -18 - 35.7 * Math.sqrt(1 - (x / 50) ** 2); // y of the front outline at a given x
 
 export function RobotDefs() {
@@ -54,9 +56,7 @@ export function RobotTop({ x = 0, y = 0, r = 0, s = 1, ghost = false, glow = fal
   const petal = { fill: 'var(--robot-key)', stroke: 'var(--robot-hi)', strokeWidth: 0.8 };
   return (
     <g transform={`translate(${x} ${y}) rotate(${r}) scale(${s})`} opacity={ghost ? 0.5 : 1}>
-      {/* wheels peek out at the back */}
-      <rect x="-53.5" y="9" width="8" height="39" rx="3.5" fill="var(--tire)" />
-      <rect x="45.5" y="9" width="8" height="39" rx="3.5" fill="var(--tire)" />
+      {/* the wheels are tucked under the shell: nothing to draw here */}
       <path d={BODY} fill="url(#t3-body)" stroke="var(--robot-stroke)" strokeWidth="1.8" strokeDasharray={ghost ? '5 4' : undefined} />
       <path d={BODY} transform="scale(.93)" fill="none" stroke="var(--robot-hi)" strokeWidth=".8" opacity=".35" />
       {/* five front proximity sensors on the arc */}
@@ -90,14 +90,18 @@ export function RobotBottom({ x = 0, y = 0, s = 1, color = false, ground = false
   const dash = { fill: 'none', stroke: 'var(--accent)', strokeWidth: 2.2, strokeDasharray: '3.5 2.5' };
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
-      {/* wheels (tyre + hub seen edge-on) */}
+      {/* the upper shell, seen from below, overhangs the wheels */}
+      <path d={BODY} fill="var(--robot-body-2)" stroke="var(--robot-stroke)" strokeWidth="1.8" />
+      {/* wheels in their wells: tread seen from below */}
       {[-1, 1].map((sd) => (
-        <g key={sd}>
-          <rect x={sd < 0 ? -55 : 40} y="8" width="15" height="41" rx="6" fill="var(--tire)" />
-          <rect x={sd < 0 ? -51.5 : 43.5} y="14" width="8" height="29" rx="3" fill="url(#t3-hub)" opacity=".85" />
+        <g key={sd} transform={`translate(${sd < 0 ? -45.5 : 29.5} 0)`}>
+          <rect x="0" y="9.5" width="16" height="39" rx="5.5" fill="var(--tire)" />
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((k) => <line key={k} x1="2.4" y1={14.5 + k * 3.8} x2="13.6" y2={14.5 + k * 3.8} stroke="var(--robot-hi)" strokeWidth=".6" opacity=".45" />)}
+          <rect x={sd < 0 ? 0 : 13} y="17" width="3" height="24" rx="1.5" fill="url(#t3-hub)" opacity=".9" />
         </g>
       ))}
-      <path d={BODY} fill="url(#t3-body)" stroke="var(--robot-stroke)" strokeWidth="1.8" />
+      {/* the lower shell recedes to leave room for the wheels */}
+      <path d={BODY_BOTTOM} fill="url(#t3-body)" stroke="var(--robot-stroke)" strokeWidth="1.8" />
       {/* faint recesses of the shell */}
       {[-1, 1].map((sd) => <rect key={sd} x={sd * 24 - 6.5} y="-36" width="13" height="13" rx="2" fill="none" stroke="var(--robot-hi)" strokeWidth=".7" opacity=".45" />)}
       {/* two IR ground sensors: a pair of small windows each, close to the front edge */}
@@ -145,11 +149,13 @@ export function RobotSide({ x = 0, y = 0, s = 1, beams = 'none' }) {
       <rect x={COLOR_Y - 3.5} y="-6.8" width="7" height="2.4" rx="1" fill={c ? 'var(--accent)' : 'var(--tire)'} />
       {g && <path d={`M${GROUND_Y - 3},-4.4 L${GROUND_Y + 3},-4.4 L${GROUND_Y + 6},0 L${GROUND_Y - 6},0 Z`} fill="var(--accent)" opacity=".45" />}
       {c && <path d={`M${COLOR_Y - 3},-4.4 L${COLOR_Y + 3},-4.4 L${COLOR_Y + 7},0 L${COLOR_Y - 7},0 Z`} fill="var(--accent)" opacity=".45" />}
-      {/* rear wheel */}
+      {/* rear wheel: dark tyre, large light hub with four holes around a central boss */}
       <circle cx="26" cy="-20" r="20" fill="var(--tire)" />
-      <circle cx="26" cy="-20" r="12.5" fill="url(#t3-hub)" />
-      {[0, 1, 2, 3, 4].map((k) => <circle key={k} cx={26 + Math.cos((k * 2 * Math.PI) / 5) * 7} cy={-20 + Math.sin((k * 2 * Math.PI) / 5) * 7} r="2.1" fill="var(--tire)" opacity=".75" />)}
-      <circle cx="26" cy="-20" r="2.6" fill="var(--tire)" />
+      <circle cx="26" cy="-20" r="15" fill="url(#t3-hub)" />
+      {[45, 135, 225, 315].map((deg) => (
+        <circle key={deg} cx={26 + Math.cos((deg * Math.PI) / 180) * 8} cy={-20 + Math.sin((deg * Math.PI) / 180) * 8} r="2.6" fill="var(--tire)" opacity=".8" />
+      ))}
+      <circle cx="26" cy="-20" r="3.2" fill="var(--robot-hi)" opacity=".7" />
     </g>
   );
 }
