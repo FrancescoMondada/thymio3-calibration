@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useT, VIDEOS_URL } from './i18n.js';
+import { useT } from './i18n.js';
 import { Icon } from './art.jsx';
 import { Notice } from './ui.jsx';
 import { useRobot } from './useRobot.jsx';
@@ -24,7 +24,6 @@ export function Wizard({ icon, title, intro, steps, onExit }) {
             <p className="muted">{intro}</p>
           </div>
         </div>
-        <a className="video-link" href={VIDEOS_URL} target="_blank" rel="noreferrer">▶ {t('common.video')}</a>
       </div>
 
       <ol className="steps" aria-label={t('nav.step', { n: index + 1, total: steps.length })}>

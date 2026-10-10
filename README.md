@@ -10,8 +10,8 @@ exactly where the on-robot menu stores them.
 
 The demo runs against a *simulated* robot (slightly imperfect on purpose, so there is
 something to calibrate). Nothing is written to any real robot in demo mode. To use a real
-robot, open the app **without** `?demo` in Chrome or Edge (Web Bluetooth is not available in
-Firefox or Safari) and click *Connect robot*. The interface is available in French and English.
+robot, open the app **without** `?demo` in **Google Chrome or Microsoft Edge** (Web Bluetooth is not
+available in Firefox or Safari; the app shows a prominent warning there) and click *Connect robot*. The interface is available in French and English.
 
 ## The five wizards
 
@@ -28,13 +28,10 @@ colour sensor, for which the firmware has no reset: just redo white and black), 
 page shows what the robot currently stores, flagged *factory value* or *changed*.
 
 The drawings are language-neutral vector illustrations of the robot (top, bottom and side
-views) traced from the Mobsya [3D viewer](https://mobsya.github.io/thymio3-viewer/): D-shaped
+views) traced from the Mobsya [3D viewer](https://mobsya.github.io/thymio3-viewer/): white D-shaped
 body with a round front and a flat back, wheels at the back, and underneath, at the front, the
 sliding point of contact, the colour-sensor slot right behind it and the two IR ground sensors
 close to the front edge.
-
-Videos of the manual (on-robot) calibrations are linked from every wizard:
-<https://drive.google.com/drive/folders/1_7w_mNVdn9GHYlVi9zzoSUTWQXT0ZlwI>
 
 ## How values reach the robot
 

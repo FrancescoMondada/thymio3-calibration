@@ -2,7 +2,7 @@
 // (https://mobsya.github.io/thymio3-viewer/):
 //  - D-shaped body, ~100 wide × 107 long: ROUND front with five proximity
 //    sensors on the arc, FLAT back with two rear sensors at the corners;
-//  - dark charcoal shell, wheels at the back on both sides;
+//  - white shell with dark tyres, wheels at the back on both sides;
 //  - touch cross in a ring near the front, Lego pins and the pen hole behind it;
 //  - underneath, at the front: the sliding point of contact (third support) on the axis, the
 //    colour sensor slot just behind it, and two IR ground sensors (a pair of small windows

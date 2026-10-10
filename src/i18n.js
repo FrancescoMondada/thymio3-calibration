@@ -5,9 +5,6 @@ export const LANGS = [
   { id: 'en', label: 'EN' },
 ];
 
-// Where the videos of the manual (on-robot) calibrations are.
-export const VIDEOS_URL = 'https://drive.google.com/drive/folders/1_7w_mNVdn9GHYlVi9zzoSUTWQXT0ZlwI';
-
 const fr = {
   'app.title': 'Calibration Thymio 3',
   'app.subtitle': 'Remplace les menus de calibration du robot, pas à pas',
@@ -18,6 +15,11 @@ const fr = {
   'conn.disconnected': 'Non connecté',
   'conn.reconnect': 'Reconnexion manuelle requise',
   'conn.noBluetooth': 'Web Bluetooth n’est pas disponible dans ce navigateur. Utilisez Chrome ou Edge, ou essayez le mode démo.',
+  'conn.browserTitle': 'Ce navigateur ne peut pas se connecter au robot',
+  'conn.browserText': 'Pour calibrer un vrai robot, ouvrez cette page dans Google Chrome ou Microsoft Edge (ordinateur ou Android). Firefox et Safari ne gèrent pas le Bluetooth web. Le mode démo, lui, fonctionne dans tous les navigateurs.',
+  'conn.browserDemo': 'Essayer le mode démo',
+  'conn.browserGet': 'Télécharger Chrome',
+  'conn.browserGetEdge': 'Télécharger Edge',
   'conn.firmware': 'Firmware',
   'conn.battery': 'Batterie',
   'mode.demo': 'Mode démo',
@@ -38,8 +40,6 @@ const fr = {
   'home.refresh': 'Relire',
   'home.notRead': 'Pas encore lu',
   'home.start': 'Commencer',
-  'home.videos': 'Vidéos des calibrations manuelles',
-  'home.videosHint': 'Les vidéos montrent la même procédure faite à la main sur le robot.',
   'home.order': 'Ordre conseillé : ligne droite → distance 15 cm → gyroscope → capteurs de sol → capteur de couleur.',
   'home.factory': 'valeur d’usine',
   'home.changed': 'modifié',
@@ -56,7 +56,6 @@ const fr = {
   'common.factoryConfirm': 'Rétablir les valeurs d’usine et les enregistrer dans le robot ?',
   'common.live': 'Mesure en direct',
   'common.stored': 'Enregistré',
-  'common.video': 'Voir la vidéo de la procédure manuelle',
   'common.demoResult': 'Résultat simulé',
   'common.waitRobot': 'Le robot travaille…',
   'common.cancel': 'Annuler',
@@ -206,6 +205,11 @@ const en = {
   'conn.disconnected': 'Not connected',
   'conn.reconnect': 'Manual reconnection needed',
   'conn.noBluetooth': 'Web Bluetooth is not available in this browser. Use Chrome or Edge, or try the demo mode.',
+  'conn.browserTitle': 'This browser cannot connect to the robot',
+  'conn.browserText': 'To calibrate a real robot, open this page in Google Chrome or Microsoft Edge (desktop or Android). Firefox and Safari do not support Web Bluetooth. The demo mode works in every browser.',
+  'conn.browserDemo': 'Try the demo mode',
+  'conn.browserGet': 'Get Chrome',
+  'conn.browserGetEdge': 'Get Edge',
   'conn.firmware': 'Firmware',
   'conn.battery': 'Battery',
   'mode.demo': 'Demo mode',
@@ -226,8 +230,6 @@ const en = {
   'home.refresh': 'Read again',
   'home.notRead': 'Not read yet',
   'home.start': 'Start',
-  'home.videos': 'Videos of the manual calibrations',
-  'home.videosHint': 'The videos show the same procedure done by hand on the robot.',
   'home.order': 'Suggested order: straight line → 15 cm distance → gyroscope → ground sensors → colour sensor.',
   'home.factory': 'factory value',
   'home.changed': 'changed',
@@ -244,7 +246,6 @@ const en = {
   'common.factoryConfirm': 'Restore the factory values and save them to the robot?',
   'common.live': 'Live reading',
   'common.stored': 'Stored',
-  'common.video': 'Watch the video of the manual procedure',
   'common.demoResult': 'Simulated result',
   'common.waitRobot': 'The robot is working…',
   'common.cancel': 'Cancel',

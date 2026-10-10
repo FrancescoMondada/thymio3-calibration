@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { I18nContext, LANGS, VIDEOS_URL, initialLang, makeT, useT } from './i18n.js';
+import { I18nContext, LANGS, initialLang, makeT, useT } from './i18n.js';
 import { RobotProvider, useRobot } from './useRobot.jsx';
 import { supportsBluetooth } from './robot.js';
 import { SURFACES } from './demo.js';
@@ -44,6 +44,27 @@ function DemoBar() {
           {Object.keys(SURFACES).map((k) => <option key={k} value={k}>{t(`surface.${k}`)}</option>)}
         </select>
       </label>
+    </div>
+  );
+}
+
+// Web Bluetooth only exists in Chromium browsers (Chrome, Edge). Say it loudly, on every page.
+function BrowserWarning() {
+  const t = useT();
+  const { mode, enterDemo } = useRobot();
+  if (supportsBluetooth()) return null;
+  return (
+    <div className="browser-warning" role="alert">
+      <span className="bw-icon" aria-hidden="true">!</span>
+      <div>
+        <h2>{t('conn.browserTitle')}</h2>
+        <p>{t('conn.browserText')}</p>
+        <div className="bw-links">
+          <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">{t('conn.browserGet')}</a>
+          <a href="https://www.microsoft.com/edge" target="_blank" rel="noreferrer">{t('conn.browserGetEdge')}</a>
+          {mode !== 'demo' && <button type="button" className="link-btn" onClick={enterDemo}>{t('conn.browserDemo')}</button>}
+        </div>
+      </div>
     </div>
   );
 }
@@ -95,7 +116,7 @@ function Home({ onOpen }) {
   return (
     <>
       <p className="lead">{t('home.intro')}</p>
-      {!ready && <Notice tone="warn">{supportsBluetooth() ? t('home.connectFirst') : t('conn.noBluetooth')}</Notice>}
+      {!ready && supportsBluetooth() && <Notice tone="warn">{t('home.connectFirst')}</Notice>}
       {conn.error && <Notice tone="danger">{conn.error}</Notice>}
       <div className="cards">
         {WIZARDS.map((w, k) => (
@@ -110,13 +131,6 @@ function Home({ onOpen }) {
       </div>
       <p className="muted small">{t('home.order')}</p>
       <Stored />
-      <section className="card videos">
-        <div>
-          <h3>{t('home.videos')}</h3>
-          <p className="muted">{t('home.videosHint')}</p>
-        </div>
-        <a className="btn btn-ghost" href={VIDEOS_URL} target="_blank" rel="noreferrer">▶ {t('home.videos')}</a>
-      </section>
     </>
   );
 }
@@ -128,6 +142,7 @@ function Shell() {
   const wiz = WIZARDS.find((w) => w.id === view);
   return (
     <div className="shell">
+      <BrowserWarning />
       <DemoBar />
       <main>
         {busy && <div className="busy" role="status"><span className="spinner" />{t('busy')}</div>}
