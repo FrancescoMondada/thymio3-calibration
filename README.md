@@ -29,7 +29,7 @@ page shows what the robot currently stores, flagged *factory value* or *changed*
 
 The drawings are language-neutral vector illustrations of the robot (top, bottom and side
 views) traced from the Mobsya [3D viewer](https://mobsya.github.io/thymio3-viewer/): white D-shaped
-body with a round front and a flat back, 4-hole wheels at the back tucked in notches of the lower shell (so they show from below), and underneath, at the front, the
+body with a round front and a flat back, 4-hole wheels at the back, flush with the body and set in notches of the lower shell (so they show from below), and underneath (kept simple), at the front, the
 sliding point of contact, the colour-sensor slot right behind it and the two IR ground sensors
 close to the front edge.
 

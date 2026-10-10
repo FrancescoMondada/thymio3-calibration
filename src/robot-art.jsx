@@ -4,7 +4,7 @@
 //    sensors on the arc, FLAT back with two rear sensors at the corners;
 //  - white shell with dark tyres, wheels at the back on both sides;
 //  - touch cross in a ring near the front, Lego pins and the pen hole behind it;
-//  - underneath, at the front: the sliding point of contact (third support) on the axis, the
+//  - underneath (simplified), at the front: the sliding point of contact (third support) on the axis, the
 //    colour sensor slot just behind it, and two IR ground sensors (a pair of small windows
 //    each) close to the front edge and to each other.
 // Units: width 100, front pointing up, origin at the centre of the outline.
@@ -19,8 +19,9 @@ export const GROUND_Y = -46;         // IR ground sensors: two pairs of small wi
 export const GROUND_HOLES = [-13, -7, 7, 13]; // x of the four windows (one emitter + one receiver per side)
 
 const BODY = 'M-50,-18 C-50,-42 -28,-53.7 0,-53.7 C28,-53.7 50,-42 50,-18 L50,47 Q50,53.7 43,53.7 L-43,53.7 Q-50,53.7 -50,47 Z';
-// Lower shell: same D, but notched on both sides (x = ±29 … ±50, y = 7 … 47) so the wheels show.
-const BODY_BOTTOM = 'M-50,-18 C-50,-42 -28,-53.7 0,-53.7 C28,-53.7 50,-42 50,-18 L50,7 L29,7 L29,47 L50,47 Q50,53.7 43,53.7 L-43,53.7 Q-50,53.7 -50,47 L-29,47 L-29,7 L-50,7 Z';
+// Lower shell: same D, but notched on both sides (x = ±34 … ±50, y = 7 … 47): the wheels sit in the
+// notches with their outer face flush with the body, so they show from below.
+const BODY_BOTTOM = 'M-50,-18 C-50,-42 -28,-53.7 0,-53.7 C28,-53.7 50,-42 50,-18 L50,7 L34,7 L34,47 L50,47 Q50,53.7 43,53.7 L-43,53.7 Q-50,53.7 -50,47 L-34,47 L-34,7 L-50,7 Z';
 const arcY = (x) => -18 - 35.7 * Math.sqrt(1 - (x / 50) ** 2); // y of the front outline at a given x
 
 export function RobotDefs() {
@@ -86,24 +87,23 @@ export function RobotTop({ x = 0, y = 0, r = 0, s = 1, ghost = false, glow = fal
 }
 
 // ---- bottom view -------------------------------------------------------------
+// Kept simple on purpose: outline, wheels, the sliding point of contact, the colour sensor,
+// the two IR ground sensors and the central (pen) hole between the wheels.
 export function RobotBottom({ x = 0, y = 0, s = 1, color = false, ground = false }) {
   const dash = { fill: 'none', stroke: 'var(--accent)', strokeWidth: 2.2, strokeDasharray: '3.5 2.5' };
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       {/* the upper shell, seen from below, overhangs the wheels */}
       <path d={BODY} fill="var(--robot-body-2)" stroke="var(--robot-stroke)" strokeWidth="1.8" />
-      {/* wheels in their wells: tread seen from below */}
+      {/* wheels, outer face flush with the body: tread seen from below */}
       {[-1, 1].map((sd) => (
-        <g key={sd} transform={`translate(${sd < 0 ? -45.5 : 29.5} 0)`}>
+        <g key={sd} transform={`translate(${sd < 0 ? -50 : 34} 0)`}>
           <rect x="0" y="9.5" width="16" height="39" rx="5.5" fill="var(--tire)" />
           {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((k) => <line key={k} x1="2.4" y1={14.5 + k * 3.8} x2="13.6" y2={14.5 + k * 3.8} stroke="var(--robot-hi)" strokeWidth=".6" opacity=".45" />)}
-          <rect x={sd < 0 ? 0 : 13} y="17" width="3" height="24" rx="1.5" fill="url(#t3-hub)" opacity=".9" />
         </g>
       ))}
       {/* the lower shell recedes to leave room for the wheels */}
       <path d={BODY_BOTTOM} fill="url(#t3-body)" stroke="var(--robot-stroke)" strokeWidth="1.8" />
-      {/* faint recesses of the shell */}
-      {[-1, 1].map((sd) => <rect key={sd} x={sd * 24 - 6.5} y="-36" width="13" height="13" rx="2" fill="none" stroke="var(--robot-hi)" strokeWidth=".7" opacity=".45" />)}
       {/* two IR ground sensors: a pair of small windows each, close to the front edge */}
       {GROUND_HOLES.map((hx) => (
         <circle key={hx} cx={hx} cy={GROUND_Y} r="2.1" fill={ground ? 'var(--accent)' : 'var(--tire)'} stroke="var(--robot-hi)" strokeWidth=".6" />
@@ -116,12 +116,8 @@ export function RobotBottom({ x = 0, y = 0, s = 1, color = false, ground = false
       {/* colour sensor: oblong window just behind the skid */}
       <rect x="-7.2" y={COLOR_Y - 3.5} width="14.4" height="7" rx="3.5" fill={color ? 'var(--accent)' : 'var(--tire)'} stroke="var(--robot-hi)" strokeWidth=".7" />
       {color && <rect x="-11.5" y={COLOR_Y - 7} width="23" height="14" rx="7" {...dash} />}
-      {/* Lego pin plate, pen hole, loudspeaker grille, screws */}
-      <rect x="-15.5" y="-12" width="31" height="31" rx="2.5" fill="none" stroke="var(--robot-hi)" strokeWidth=".9" opacity=".7" />
-      {[0, 1, 2].flatMap((i) => [0, 1, 2, 3].map((j) => <circle key={`${i}${j}`} cx={-9.8 + i * 9.8} cy={-5.5 + j * 7.9} r="2.5" fill="none" stroke="var(--robot-hi)" strokeWidth=".8" opacity=".85" />))}
+      {/* central hole between the wheels */}
       <circle cx="0" cy="30" r="5" fill="var(--art-bg)" stroke="var(--robot-hi)" strokeWidth=".8" />
-      {[0, 1, 2, 3].map((k) => <line key={k} x1="-7" y1={41 + k * 2.4} x2="7" y2={41 + k * 2.4} stroke="var(--robot-hi)" strokeWidth=".8" opacity=".8" />)}
-      {[-1, 1].map((sd) => <circle key={sd} cx={sd * 20} cy="42" r="1.8" fill="var(--tire)" />)}
     </g>
   );
 }
