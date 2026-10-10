@@ -150,25 +150,29 @@ export function GyroStillArt({ label }) {
 }
 
 // `error` is the angle (in degrees) the robot is off the line after the turn.
+// The reference line is drawn along the BACK side of the robot (the flat one), just behind it and
+// sticking out on both sides: the longer it is, the easier it is to see a small angle error.
+// `error` (degrees) is how far the robot is rotated after the turn; the red dashed line is its back
+// side prolonged on both sides.
 export function GyroTurnArt({ label, stage = 'start', error = 0 }) {
+  const k = 1.25;
+  const px = 320, py = 176;                        // pivot: middle of the wheel axle
+  const lineY = (HALF_LEN - AXLE_Y) * k + 5;       // just behind the back edge, relative to the pivot
+  const half = 112;                                // half length of the line
   const showError = stage === 'after';
   const rot = showError ? error : 0;
   return (
     <Frame label={label}>
       <rect x="150" y="14" width="340" height="312" rx="10" fill="var(--floor)" />
-      {/* reference line */}
-      <line x1="320" y1="30" x2="320" y2="200" stroke="var(--ok)" strokeWidth="5" />
-      <circle cx="320" cy="176" r="118" fill="none" stroke="var(--accent)" strokeWidth="5" strokeDasharray="14 10" opacity=".85" />
+      <circle cx={px} cy={py} r="122" fill="none" stroke="var(--accent)" strokeWidth="3.5" strokeDasharray="12 10" opacity=".55" />
       <path d="M236,106 A118,118 0 0 0 202,176" fill="none" stroke="var(--accent)" strokeWidth="6" markerEnd="url(#ar-accent)" />
       <text x="168" y="104" fontSize="22" fontWeight="800" textAnchor="middle" fill="var(--accent)">360°</text>
-      <g transform={`translate(320 176) rotate(${rot})`}>
-        <RobotTop x={0} y={-AXLE_Y * 1.25} s={1.25} />
+      {/* reference line on the paper, behind the robot, along its back side */}
+      <line x1={px - half} y1={py + lineY} x2={px + half} y2={py + lineY} stroke="var(--ok)" strokeWidth="6" strokeLinecap="round" />
+      <g transform={`translate(${px} ${py}) rotate(${rot})`}>
+        <RobotTop x={0} y={-AXLE_Y * k} s={k} />
+        {showError && <line x1={-half} y1={lineY} x2={half} y2={lineY} stroke="var(--danger)" strokeWidth="3.5" strokeDasharray="7 5" strokeLinecap="round" />}
       </g>
-      {showError && (
-        <g>
-          <line x1="320" y1="176" x2={320 + Math.sin((rot * Math.PI) / 180) * 140} y2={176 - Math.cos((rot * Math.PI) / 180) * 140} stroke="var(--danger)" strokeWidth="3" strokeDasharray="6 5" />
-        </g>
-      )}
       {stage === 'nudge' && (
         <g fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round">
           <path d="M196,150 A140,140 0 0 0 176,206" markerEnd="url(#ar-accent)" />

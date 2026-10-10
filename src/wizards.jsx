@@ -359,6 +359,16 @@ export function GyroWizard({ onExit }) {
     const r = await run('gyroNudge', { dir });
     if (r) { setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); }
   };
+  // After a manual rotation (by hand) or a nudge, read the precise angle accumulated by the gyroscope.
+  const readAngle = async () => {
+    const r = await run('gyroAngle');
+    if (r) { setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); }
+  };
+  // Demo only: stands for turning the robot by hand.
+  const hand = async (dir) => {
+    const r = await run('gyroHand', { dir });
+    if (r) { setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); }
+  };
   const shownErr = mode === 'demo' && errDeg !== null ? errDeg : 14;
 
   const steps = [
@@ -399,7 +409,7 @@ export function GyroWizard({ onExit }) {
     },
     { title: t('gyro.s3.title'), text: t('gyro.s3.text'), tip: t('gyro.s3.tip'), art: <GyroTurnArt label={t('gyro.s3.title')} stage="start" /> },
     {
-      title: t('gyro.s4.title'), text: t('gyro.s4.text'), art: <GyroTurnArt label={t('gyro.s4.title')} stage={turned ? 'after' : 'start'} error={shownErr} />,
+      title: t('gyro.s4.title'), text: t('gyro.s4.text'), tip: t('gyro.s4.tip'), art: <GyroTurnArt label={t('gyro.s4.title')} stage={turned ? 'after' : 'start'} error={shownErr} />,
       body: (
         <>
           <NeedRobot />
@@ -407,10 +417,18 @@ export function GyroWizard({ onExit }) {
           <div className="row">
             <Btn disabled={!turned} onClick={() => nudge(-1)}>{t('gyro.nudgeLeft')}</Btn>
             <Btn disabled={!turned} onClick={() => nudge(1)}>{t('gyro.nudgeRight')}</Btn>
+            {mode === 'demo' && (
+              <>
+                <Btn kind="ghost" disabled={!turned} onClick={() => hand(-1)}>{t('gyro.handDemo')} ↺</Btn>
+                <Btn kind="ghost" disabled={!turned} onClick={() => hand(1)}>{t('gyro.handDemo')} ↻</Btn>
+              </>
+            )}
           </div>
           <div className="stats">
+            <Stat label={t('gyro.liveAngle')}>{turned && Number.isFinite(tel.angleDeg) ? `${tel.angleDeg}°` : '–'}</Stat>
             <Stat label={t('gyro.measuredCorrection')}>{angle ? `${angle[0]} (${angle[1]}°)` : '–'}</Stat>
           </div>
+          <div className="row"><Btn kind="ghost" disabled={!turned} onClick={readAngle}>{t('gyro.readAngle')}</Btn></div>
           {mode === 'demo' && errDeg !== null && (
             <Notice tone="demo"><b>{t('common.demoResult')} :</b>{' '}
               {Math.abs(errDeg) < 0.6 ? t('gyro.demoAligned') : t('gyro.demoErr', { deg: Math.abs(errDeg).toFixed(1) })}

@@ -19,7 +19,7 @@ available in Firefox or Safari; the app shows a prominent warning there) and cli
 |---|---|---|
 | 1 | **Motors: straight line** | Left/right motor correction (±50, about ±20 %) so the robot drives straight |
 | 2 | **Motors: 15 cm** | Travel time for exactly 15 cm forward and backward (and the backward/forward ratio) |
-| 3 | **Gyroscope** | Resting offsets (x, y, z), then the rotation scale so 360° is a real full turn |
+| 3 | **Gyroscope** | Resting offsets (x, y, z), then the rotation scale so 360° is a real full turn: a line is drawn along the robot's back side, the robot spins 360° and is re-aligned on the line with the ↺ ↻ buttons or by hand (the gyroscope measures it) |
 | 4 | **Ground sensors** | Black and white reference of the two front IR sensors (reflected − ambient) |
 | 5 | **Colour sensor** | White and black reference of the colour sensor |
 

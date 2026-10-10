@@ -128,6 +128,8 @@ time.sleep_ms(${NUDGE_MS})
 m.set_speed(0, 0)
 time.sleep_ms(400)
 ${angleOut}`,
+  // Precise angle counted since the end of the turn (nudges and/or hand rotation).
+  gyroAngle: () => angleOut,
   // factor = -angle / 4 : the residual is shared by the four quarter turns.
   gyroScaleSave: () => `a = i.get_angle_raw()
 f = int(-a / 4)

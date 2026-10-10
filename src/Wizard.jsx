@@ -4,6 +4,9 @@ import { Icon } from './art.jsx';
 import { Notice } from './ui.jsx';
 import { useRobot } from './useRobot.jsx';
 
+// **bold** segments in the strings become <strong>.
+const rich = (text) => text.split('**').map((part, k) => (k % 2 ? <strong key={k}>{part}</strong> : part));
+
 // Generic step-by-step shell: illustration + instructions + the controls of
 // the step. `steps[i]` = { title, text, tip, art, body }.
 export function Wizard({ icon, title, intro, steps, onExit }) {
@@ -42,7 +45,7 @@ export function Wizard({ icon, title, intro, steps, onExit }) {
         <div className="wizard-panel">
           <div className="kicker">{t('nav.step', { n: index + 1, total: steps.length })}</div>
           <h3>{step.title}</h3>
-          <p>{step.text}</p>
+          <p>{rich(step.text)}</p>
           {step.tip && <Notice tone="tip">{step.tip}</Notice>}
           {mode === 'demo' && step.demoNote}
           <div className="controls">{step.body}</div>

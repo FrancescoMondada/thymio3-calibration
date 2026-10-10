@@ -195,6 +195,17 @@ export class DemoRobot {
     this.turnErr -= dir * TRUE.nudgeRaw;
     return { angle: [this.angleRaw, Math.round(this.angleRaw / RAW_PER_DEG)], demo: { errDeg: this.turnErr / RAW_PER_DEG } };
   }
+  async op_gyroAngle() {
+    await sleep(200);
+    return { angle: [this.angleRaw, Math.round(this.angleRaw / RAW_PER_DEG)], demo: { errDeg: this.turnErr / RAW_PER_DEG } };
+  }
+  // Demo only: stands for the user turning the robot by hand (the gyroscope integrates it).
+  async op_gyroHand({ dir }) {
+    const step = 150;
+    this.angleRaw += dir * step;
+    this.turnErr -= dir * step;
+    return { angle: [this.angleRaw, Math.round(this.angleRaw / RAW_PER_DEG)], demo: { errDeg: this.turnErr / RAW_PER_DEG } };
+  }
   async op_gyroScaleSave() {
     await sleep(300);
     const f = clamp(Math.trunc(-this.angleRaw / 4), -32000, 32000);
