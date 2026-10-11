@@ -152,7 +152,7 @@ function Home({ onOpen }) {
 // Step-by-step trace of the Bluetooth exchange: to paste in a bug report when something fails.
 function CommLog() {
   const t = useT();
-  const { log, clearLog, mode } = useRobot();
+  const { log, clearLog, mode, run, ready, busy } = useRobot();
   const [copied, setCopied] = useState(false);
   if (mode === 'demo') return null;
   const text = log.join('\n');
@@ -165,6 +165,7 @@ function CommLog() {
       <div className="row">
         <button type="button" className="btn btn-ghost" onClick={copy} disabled={!log.length}>{copied ? t('log.copied') : t('log.copy')}</button>
         <button type="button" className="btn btn-ghost" onClick={clearLog} disabled={!log.length}>{t('log.clear')}</button>
+        <button type="button" className="btn btn-primary" onClick={() => run('ping')} disabled={!ready || busy} title={t('log.pingHint')}>{t('log.ping')}</button>
       </div>
       <pre>{text || t('log.empty')}</pre>
     </details>
@@ -173,7 +174,7 @@ function CommLog() {
 
 function Shell() {
   const t = useT();
-  const { error, clearError, busy, conn } = useRobot();
+  const { error, clearError, busy, conn, log } = useRobot();
   const [view, setView] = useState('home');
   const wiz = WIZARDS.find((w) => w.id === view);
   return (
@@ -187,6 +188,7 @@ function Shell() {
             <b>{t('error.title')}</b> — {error}{' '}
             <span className="muted small">{t('error.seeLog')}</span>{' '}
             <button type="button" className="link-btn" onClick={clearError}>{t('error.dismiss')}</button>
+            {log.length > 0 && <pre className="errlog">{log.slice(-10).join('\n')}</pre>}
           </Notice>
         )}
         {wiz ? <wiz.Comp key={wiz.id} onExit={() => setView('home')} /> : <Home onOpen={setView} />}

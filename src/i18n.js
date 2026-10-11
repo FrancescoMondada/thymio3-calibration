@@ -38,6 +38,8 @@ const fr = {
   'log.title': 'Journal de communication (à copier en cas de problème)',
   'log.copy': 'Copier', 'log.copied': 'Copié', 'log.clear': 'Effacer',
   'log.empty': 'Aucun échange pour l’instant.',
+  'log.ping': 'Tester la communication',
+  'log.pingHint': 'Envoie un script minimal (deux lignes affichées) pour vérifier l’aller-retour Bluetooth',
 
   'home.intro': 'Choisissez une calibration. Chaque assistant reprend la procédure des menus du robot (appui long sur ◀ ▶ pendant 3 s), l’illustre, puis enregistre les valeurs dans la mémoire du robot exactement comme le fait le firmware.',
   'home.connectFirst': 'Connectez le robot (ou lancez le mode démo) pour commencer.',
@@ -238,6 +240,8 @@ const en = {
   'log.title': 'Communication log (copy it when something goes wrong)',
   'log.copy': 'Copy', 'log.copied': 'Copied', 'log.clear': 'Clear',
   'log.empty': 'No exchange yet.',
+  'log.ping': 'Test the communication',
+  'log.pingHint': 'Sends a minimal script (prints two lines) to check the Bluetooth round trip',
 
   'home.intro': 'Pick a calibration. Each wizard follows the procedure of the robot’s own menus (hold ◀ ▶ for 3 s), illustrates it, then stores the values in the robot’s memory exactly as the firmware does.',
   'home.connectFirst': 'Connect the robot (or start the demo mode) to begin.',

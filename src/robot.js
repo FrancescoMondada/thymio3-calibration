@@ -40,7 +40,11 @@ export class RealRobot {
   }
 
   // Timestamped line for the communication log shown in the UI.
-  note(msg) { this.emit('log', `+${((Date.now() - this.t0) / 1000).toFixed(1)}s  ${msg}`); }
+  note(msg) {
+    const line = `+${((Date.now() - this.t0) / 1000).toFixed(1)}s  ${msg}`;
+    console.log('[Thymio calibration]', line); // also in the browser console, for bug reports
+    this.emit('log', line);
+  }
 
   start() {
     this.note('ready');

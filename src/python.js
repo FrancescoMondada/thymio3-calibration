@@ -59,6 +59,9 @@ out("ground", [a[0], d[0], a[1], d[1]])`;
 const angleOut = `out("angle", [i.get_angle_raw(), i.get_angle_deg()])`;
 
 export const SCRIPTS = {
+  // Transport test only: prints two lines, touches nothing on the robot.
+  ping: () => `print("@@ping 1")\nprint("@@done " + "." * 110)\n`,
+
   // ---- everything currently stored in the robot -------------------------
   // Each value is read on its own: an older firmware may lack a function, and one failure must not
   // hide the other settings (a missing one is reported as "<name>Err").
@@ -190,10 +193,12 @@ ${readGround}`,
 ${readGround}`,
 };
 
+const RAW = new Set(['ping']); // sent as is, not wrapped with the robot setup
+
 export function buildScript(name, args = {}) {
   const make = SCRIPTS[name];
   if (!make) throw new Error(`Unknown calibration script: ${name}`);
-  return wrap(make(args));
+  return RAW.has(name) ? make(args) : wrap(make(args));
 }
 
 // "@@straight [259, 253]" lines → { straight: [259, 253] }
