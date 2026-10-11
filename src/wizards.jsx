@@ -80,13 +80,14 @@ export function StraightWizard({ onExit }) {
             <Btn onClick={() => go(-1)}>{t('straight.backward')}</Btn>
           </div>
           <div className="adjust">
-            <div className="adjust-group">
-              <span className="adjust-label">{t('straight.toLeft')}</span>
-              <div className="row"><Btn needsRobot={false} onClick={() => adjust(-5)}>−5</Btn><Btn needsRobot={false} onClick={() => adjust(-1)}>−1</Btn></div>
-            </div>
+            {/* Left box = the robot drifts to the left (add to the left motor: +), right box = drifts to the right (−). */}
             <div className="adjust-group">
               <span className="adjust-label">{t('straight.toRight')}</span>
               <div className="row"><Btn needsRobot={false} onClick={() => adjust(1)}>+1</Btn><Btn needsRobot={false} onClick={() => adjust(5)}>+5</Btn></div>
+            </div>
+            <div className="adjust-group">
+              <span className="adjust-label">{t('straight.toLeft')}</span>
+              <div className="row"><Btn needsRobot={false} onClick={() => adjust(-1)}>−1</Btn><Btn needsRobot={false} onClick={() => adjust(-5)}>−5</Btn></div>
             </div>
           </div>
           <p className="muted small">{t('straight.limit')}</p>
