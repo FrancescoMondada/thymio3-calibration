@@ -15,6 +15,7 @@ export function RobotProvider({ children }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [surface, setSurfaceState] = useState('white');
+  const [log, setLog] = useState([]);                 // communication log (real robot only)
   const backend = useRef(null);
   const pendingConnect = useRef(false);            // connect as soon as the real backend is up (from the demo)
   const telTimer = useRef(0);
@@ -22,6 +23,7 @@ export function RobotProvider({ children }) {
 
   // Telemetry arrives much faster than the UI needs: render at ~10 Hz.
   const emit = useCallback((kind, value) => {
+    if (kind === 'log') { setLog((l) => [...l.slice(-399), value]); return; }
     if (kind === 'conn') setConn((c) => ({ ...c, ...value, error: value.error || '' }));
     if (kind === 'tel') {
       pendingTel.current = value;
@@ -109,11 +111,11 @@ export function RobotProvider({ children }) {
   }, [ready, run]);
 
   const value = useMemo(() => ({
-    mode, conn, tel, stored, busy, error, surface, ready,
+    mode, conn, tel, stored, busy, error, surface, ready, log, clearLog: () => setLog([]),
     run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop,
     clearError: () => setError(''),
     refresh: () => run('readAll'),
-  }), [mode, conn, tel, stored, busy, error, surface, ready, run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop]);
+  }), [mode, conn, tel, stored, busy, error, surface, ready, log, run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop]);
 
   return <RobotCtx.Provider value={value}>{children}</RobotCtx.Provider>;
 }

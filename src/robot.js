@@ -34,12 +34,23 @@ export const supportsBluetooth = () => typeof navigator !== 'undefined' && 'blue
 export class RealRobot {
   constructor(emit) {
     this.emit = emit;
+    this.t0 = Date.now();
     this.chain = Promise.resolve();
     this.tel = { ground: {}, reflected: {}, ambient: {}, colorRaw: {}, hsv: {}, gyro: {}, buttons: {} };
   }
 
+  // Timestamped line for the communication log shown in the UI.
+  note(msg) { this.emit('log', `+${((Date.now() - this.t0) / 1000).toFixed(1)}s  ${msg}`); }
+
   start() {
+    this.note('ready');
+    // The API handles notifications in async handlers whose failures are otherwise silent: keep a trace.
+    this.onRejection = (e) => { this.note(`UNHANDLED ERROR (API): ${e.reason?.name || ''} ${e.reason?.message || e.reason}`); };
+    window.addEventListener('unhandledrejection', this.onRejection);
+    this.onLoadResult = (e) => this.note(`upload result: code ${e.detail?.code} (${e.detail?.message})`);
+    document.addEventListener('thymio-python-load-result', this.onLoadResult);
     this.onConnected = async (e) => {
+      this.note(e.detail ? 'connected' : 'disconnected');
       if (e.detail) {
         // Queue the settle phase FIRST: everything that talks to the robot waits behind it (see op()),
         // including a script requested by the UI as soon as it sees the connection.
@@ -83,6 +94,8 @@ export class RealRobot {
   }
 
   stop() {
+    window.removeEventListener('unhandledrejection', this.onRejection);
+    document.removeEventListener('thymio-python-load-result', this.onLoadResult);
     document.removeEventListener(EV.connected, this.onConnected);
     document.removeEventListener(EV.manualReconnect, this.onReconnect);
     document.removeEventListener(EV.sensors, this.onMain);
@@ -96,12 +109,18 @@ export class RealRobot {
   // The API itself asks for the device info right after connecting, so let that finish first, then
   // ask for the firmware version ourselves before any script is uploaded.
   async settle() {
+    this.emit('conn', { initializing: true });
+    this.note('settling: letting the API finish its own device-info request (1.8 s)');
     await sleep(1800);
     try {
       const firmware = await withTimeout(thymio.getFirmwareInfo(), 5000);
+      this.note(`firmware: ESP32 ${firmware.esp32_ver}, STM32 ${firmware.stm32_ver}`);
       this.emit('conn', { firmware });
-    } catch { /* older firmware, or no answer: the version is simply not shown */ }
+    } catch (err) {
+      this.note(`firmware version not available (${err?.message || err})`);
+    }
     await sleep(300);
+    this.emit('conn', { initializing: false });
   }
 
   async connect() {
@@ -112,44 +131,56 @@ export class RealRobot {
 
   // Scripts run one at a time: the robot refuses a second one while one runs.
   op(name, args) {
-    const job = this.chain.then(() => this.runWithRetry(buildScript(name, args)));
+    const job = this.chain.then(() => this.runWithRetry(buildScript(name, args), name));
     this.chain = job.catch(() => {});
     return job;
   }
 
   // A lost upload acknowledgement means the script may not have been loaded: retry once, but only
   // when nothing at all came back (a script that ran would have printed its final marker).
-  async runWithRetry(script) {
+  async runWithRetry(script, label) {
     try {
-      return await this.runScript(script);
+      return await this.runScript(script, label);
     } catch (err) {
+      this.note(`${label}: FAILED: ${err?.message || err}`);
       if (!err?.retry) throw err;
+      this.note(`${label}: retrying once`);
       await sleep(1000);
-      return this.runScript(script);
+      return this.runScript(script, label);
     }
   }
 
-  async runScript(script, timeoutMs = 40000) {
+  async runScript(script, label = 'script', timeoutMs = 40000) {
     let out = '';
+    const T = Date.now();
+    const dt = () => `${Date.now() - T} ms`;
     let finish;
     const done = new Promise((r) => { finish = r; });
     // Finished = the robot says so, or the final marker went through (the end-of-script
     // notification can be lost when it collides with an output indication).
-    const onOut = (e) => { out += e.detail; if (/@@done\b/.test(out)) finish(); };
-    const onStatus = (e) => { if (e.detail === false) finish(); };
+    const onOut = (e) => {
+      out += e.detail;
+      this.note(`${label}: output +${dt()} ${JSON.stringify(e.detail)}`);
+      if (/@@done\b/.test(out)) finish();
+    };
+    const onStatus = (e) => { this.note(`${label}: execution status ${e.detail ? 'started' : 'terminated'} +${dt()}`); if (e.detail === false) finish(); };
     document.addEventListener(EV.stdout, onOut);
     document.addEventListener(EV.pyStatus, onStatus);
     let timer;
     let ackLost = false;
     try {
       try {
+        this.note(`${label}: uploading ${script.length} bytes`);
         await thymio.sendPythonScript(script);
+        this.note(`${label}: upload acknowledged +${dt()}`);
       } catch (err) {
         // The firmware marks the script ready even if its acknowledgement never reaches us,
         // so go on and run it; a missing end marker below tells whether it really worked.
         if (!/Timed out waiting for load ACK/i.test(String(err?.message || err))) throw err;
         ackLost = true;
+        this.note(`${label}: upload acknowledgement lost +${dt()}, running the script anyway`);
       }
+      this.note(`${label}: execute`);
       await thymio.executeLoadedScript();
       await Promise.race([
         done,
@@ -160,6 +191,7 @@ export class RealRobot {
       const t0 = Date.now();
       while (!/@@done\b|Traceback|\w+Error:/.test(out) && Date.now() - t0 < STDOUT_GRACE_MS) await sleep(50);
       await sleep(100); // trailing fragments
+      this.note(`${label}: result read +${dt()} (${/@@done\b/.test(out) ? 'end marker seen' : 'NO end marker'})`);
     } catch (err) {
       try { await thymio.stopScriptExecution(); } catch { /* ignore */ }
       throw err;

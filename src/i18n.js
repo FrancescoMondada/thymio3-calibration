@@ -33,6 +33,11 @@ const fr = {
   'busy': 'Le robot exécute une commande…',
   'error.title': 'Le robot a signalé un problème',
   'error.dismiss': 'Fermer',
+  'error.seeLog': 'Détails dans le journal de communication, en bas de page.',
+  'busy.init': 'Initialisation de la connexion avec le robot…',
+  'log.title': 'Journal de communication (à copier en cas de problème)',
+  'log.copy': 'Copier', 'log.copied': 'Copié', 'log.clear': 'Effacer',
+  'log.empty': 'Aucun échange pour l’instant.',
 
   'home.intro': 'Choisissez une calibration. Chaque assistant reprend la procédure des menus du robot (appui long sur ◀ ▶ pendant 3 s), l’illustre, puis enregistre les valeurs dans la mémoire du robot exactement comme le fait le firmware.',
   'home.connectFirst': 'Connectez le robot (ou lancez le mode démo) pour commencer.',
@@ -228,6 +233,11 @@ const en = {
   'busy': 'The robot is running a command…',
   'error.title': 'The robot reported a problem',
   'error.dismiss': 'Dismiss',
+  'error.seeLog': 'Details in the communication log at the bottom of the page.',
+  'busy.init': 'Setting up the connection with the robot…',
+  'log.title': 'Communication log (copy it when something goes wrong)',
+  'log.copy': 'Copy', 'log.copied': 'Copied', 'log.clear': 'Clear',
+  'log.empty': 'No exchange yet.',
 
   'home.intro': 'Pick a calibration. Each wizard follows the procedure of the robot’s own menus (hold ◀ ▶ for 3 s), illustrates it, then stores the values in the robot’s memory exactly as the firmware does.',
   'home.connectFirst': 'Connect the robot (or start the demo mode) to begin.',

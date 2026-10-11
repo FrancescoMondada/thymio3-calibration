@@ -88,6 +88,9 @@ Issues and corrections are welcome.
   "script terminated" notification does not wait for it. The app waits for the script's end marker (padded
   to over 100 bytes so the firmware flushes at once) before reading the result. Each setting is also read on
   its own, so a firmware that lacks one function still shows the others and lists the unreadable ones.
+- **Anything else.** Open *Communication log* at the bottom of the page (real robot only), press *Copy* and
+  paste it in the issue: it lists every step with timestamps (connection, upload, acknowledgement, script
+  output, errors raised inside the Thymio API).
 - The firmware version is shown in the top bar once connected.
 
 ## Run locally

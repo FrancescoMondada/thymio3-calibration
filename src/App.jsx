@@ -149,9 +149,31 @@ function Home({ onOpen }) {
   );
 }
 
+// Step-by-step trace of the Bluetooth exchange: to paste in a bug report when something fails.
+function CommLog() {
+  const t = useT();
+  const { log, clearLog, mode } = useRobot();
+  const [copied, setCopied] = useState(false);
+  if (mode === 'demo') return null;
+  const text = log.join('\n');
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ }
+  };
+  return (
+    <details className="commlog">
+      <summary>{t('log.title')}{log.length ? ` (${log.length})` : ''}</summary>
+      <div className="row">
+        <button type="button" className="btn btn-ghost" onClick={copy} disabled={!log.length}>{copied ? t('log.copied') : t('log.copy')}</button>
+        <button type="button" className="btn btn-ghost" onClick={clearLog} disabled={!log.length}>{t('log.clear')}</button>
+      </div>
+      <pre>{text || t('log.empty')}</pre>
+    </details>
+  );
+}
+
 function Shell() {
   const t = useT();
-  const { error, clearError, busy } = useRobot();
+  const { error, clearError, busy, conn } = useRobot();
   const [view, setView] = useState('home');
   const wiz = WIZARDS.find((w) => w.id === view);
   return (
@@ -159,15 +181,17 @@ function Shell() {
       <BrowserWarning />
       <DemoBar />
       <main>
-        {busy && <div className="busy" role="status"><span className="spinner" />{t('busy')}</div>}
+        {busy && <div className="busy" role="status"><span className="spinner" />{conn.initializing ? t('busy.init') : t('busy')}</div>}
         {error && (
           <Notice tone="danger">
             <b>{t('error.title')}</b> — {error}{' '}
+            <span className="muted small">{t('error.seeLog')}</span>{' '}
             <button type="button" className="link-btn" onClick={clearError}>{t('error.dismiss')}</button>
           </Notice>
         )}
         {wiz ? <wiz.Comp key={wiz.id} onExit={() => setView('home')} /> : <Home onOpen={setView} />}
       </main>
+      <CommLog />
       <footer className="muted small">{t('footer.credit')}</footer>
     </div>
   );
