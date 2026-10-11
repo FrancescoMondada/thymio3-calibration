@@ -202,11 +202,16 @@ footer { padding-top: 24px; text-align: center; }
 .meter-fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width 0.12s linear; }
 .tone-red { background: #e0463f; } .tone-green { background: #2fa35a; } .tone-blue { background: #3c6df0; } .tone-muted { background: var(--art-line); }
 
-.corr { padding: 6px 4px 0; }
-.corr-track { position: relative; height: 14px; border-radius: 99px; background: var(--line); }
-.corr-zero { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 3px; background: var(--art-ink); border-radius: 2px; }
-.corr-knob { position: absolute; top: 50%; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid var(--card); transform: translate(-50%, -50%); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); transition: left 0.15s; }
-.corr-scale { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+/* correction slider: a real, draggable range input with a mark at zero */
+.corr { position: relative; padding: 4px 0 0; }
+.corr::before { content: ""; position: absolute; left: 50%; top: 2px; width: 3px; height: 32px; margin-left: -1.5px; background: var(--art-ink); border-radius: 2px; pointer-events: none; z-index: 0; }
+.corr-range { position: relative; z-index: 1; width: 100%; height: 36px; margin: 0; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none; touch-action: pan-y; }
+.corr-range::-webkit-slider-runnable-track { height: 14px; border-radius: 99px; background: var(--line); }
+.corr-range::-moz-range-track { height: 14px; border-radius: 99px; background: var(--line); }
+.corr-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; margin-top: -8px; border-radius: 50%; background: var(--accent); border: 4px solid var(--card); box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35); cursor: grab; }
+.corr-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 4px solid var(--card); box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35); cursor: grab; }
+.corr-range:active::-webkit-slider-thumb { cursor: grabbing; }
+.corr-scale { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .adjust { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .adjust-group { display: grid; gap: 6px; padding: 10px; border: 1px dashed var(--line); border-radius: 12px; align-content: start; }
 .adjust-label { font-size: 13.5px; color: var(--muted); font-weight: 600; }

@@ -54,7 +54,6 @@ export function StraightWizard({ onExit }) {
     } else setWarn('');
   };
   const drift = last?.demo?.driftCm;
-  const pct = ((corr + MOTOR_CORR_MAX) / (2 * MOTOR_CORR_MAX)) * 100;
 
   const steps = [
     { title: t('straight.s1.title'), text: t('straight.s1.text'), tip: t('straight.s1.tip'), art: <StraightArt label={t('straight.s1.title')} /> },
@@ -64,7 +63,11 @@ export function StraightWizard({ onExit }) {
         <>
           <NeedRobot />
           <div className="corr">
-            <div className="corr-track"><div className="corr-zero" /><div className="corr-knob" style={{ left: `${pct}%` }} /></div>
+            <input
+              type="range" className="corr-range" min={-MOTOR_CORR_MAX} max={MOTOR_CORR_MAX} step="1" value={corr}
+              aria-label={t('straight.correction')}
+              onChange={(e) => { touch(); setSaved(false); setCorr(Number(e.target.value)); }}
+            />
             <div className="corr-scale"><span>−{MOTOR_CORR_MAX}</span><span>0</span><span>+{MOTOR_CORR_MAX}</span></div>
           </div>
           <div className="stats">
