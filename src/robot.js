@@ -25,6 +25,9 @@ function hsvToCss(h, s, v) {
   return `rgb(${Math.round((r + m) * 255)},${Math.round((g + m) * 255)},${Math.round((b + m) * 255)})`;
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const withTimeout = (promise, ms) => Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+
 export const supportsBluetooth = () => typeof navigator !== 'undefined' && 'bluetooth' in navigator;
 
 export class RealRobot {
@@ -37,9 +40,10 @@ export class RealRobot {
   start() {
     this.onConnected = async (e) => {
       if (e.detail) {
-        let firmware = null;
-        try { firmware = await thymio.getFirmwareInfo(); } catch { /* older firmware */ }
-        this.emit('conn', { status: 'connected', device: thymio.getDeviceName?.() || 'THYMIO 3', firmware });
+        // Queue the settle phase FIRST: everything that talks to the robot waits behind it (see op()),
+        // including a script requested by the UI as soon as it sees the connection.
+        this.chain = this.chain.then(() => this.settle()).catch(() => {});
+        this.emit('conn', { status: 'connected', device: thymio.getDeviceName?.() || 'THYMIO 3', firmware: null });
         try { await thymio.startAllSensorStreaming(); } catch (err) { console.warn('sensor streaming failed', err); }
       } else {
         this.emit('conn', { status: 'disconnected' });
@@ -86,6 +90,19 @@ export class RealRobot {
 
   push() { this.emit('tel', { ...this.tel, fresh: true }); }
 
+  // The robot answers some requests (device info, script upload acknowledgement…) with BLE
+  // *indications*, and only one indication can be in flight at a time: when two overlap, one is lost.
+  // The API itself asks for the device info right after connecting, so let that finish first, then
+  // ask for the firmware version ourselves before any script is uploaded.
+  async settle() {
+    await sleep(1800);
+    try {
+      const firmware = await withTimeout(thymio.getFirmwareInfo(), 5000);
+      this.emit('conn', { firmware });
+    } catch { /* older firmware, or no answer: the version is simply not shown */ }
+    await sleep(300);
+  }
+
   async connect() {
     this.emit('conn', { status: 'connecting' });
     try { await thymio.requestAndConnect(); } catch (err) { this.emit('conn', { status: 'disconnected', error: String(err?.message || err) }); throw err; }
@@ -94,28 +111,50 @@ export class RealRobot {
 
   // Scripts run one at a time: the robot refuses a second one while one runs.
   op(name, args) {
-    const job = this.chain.then(() => this.runScript(buildScript(name, args)));
+    const job = this.chain.then(() => this.runWithRetry(buildScript(name, args)));
     this.chain = job.catch(() => {});
     return job;
   }
 
+  // A lost upload acknowledgement means the script may not have been loaded: retry once, but only
+  // when nothing at all came back (a script that ran would have printed its final marker).
+  async runWithRetry(script) {
+    try {
+      return await this.runScript(script);
+    } catch (err) {
+      if (!err?.retry) throw err;
+      await sleep(1000);
+      return this.runScript(script);
+    }
+  }
+
   async runScript(script, timeoutMs = 40000) {
     let out = '';
-    const onOut = (e) => { out += e.detail; };
     let finish;
     const done = new Promise((r) => { finish = r; });
+    // Finished = the robot says so, or the final marker went through (the end-of-script
+    // notification can be lost when it collides with an output indication).
+    const onOut = (e) => { out += e.detail; if (/@@done\b/.test(out)) finish(); };
     const onStatus = (e) => { if (e.detail === false) finish(); };
     document.addEventListener(EV.stdout, onOut);
     document.addEventListener(EV.pyStatus, onStatus);
     let timer;
+    let ackLost = false;
     try {
-      await thymio.sendPythonScript(script);
+      try {
+        await thymio.sendPythonScript(script);
+      } catch (err) {
+        // The firmware marks the script ready even if its acknowledgement never reaches us,
+        // so go on and run it; a missing end marker below tells whether it really worked.
+        if (!/Timed out waiting for load ACK/i.test(String(err?.message || err))) throw err;
+        ackLost = true;
+      }
       await thymio.executeLoadedScript();
       await Promise.race([
         done,
         new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('Timeout: the robot did not finish the script')), timeoutMs); }),
       ]);
-      await new Promise((r) => setTimeout(r, 200)); // let the last stdout notifications arrive
+      await sleep(200); // let the last stdout notifications arrive
     } catch (err) {
       try { await thymio.stopScriptExecution(); } catch { /* ignore */ }
       throw err;
@@ -128,7 +167,16 @@ export class RealRobot {
       const line = out.trim().split(/\r?\n/).filter(Boolean).pop();
       throw new Error(`Robot: ${line}`);
     }
-    return parseOutput(out);
+    const result = parseOutput(out);
+    if (!result.done) {
+      const e = new Error(ackLost
+        ? 'The robot did not acknowledge the script upload (Bluetooth). Wait a few seconds and try again.'
+        : 'The robot did not run the script to the end.');
+      e.retry = ackLost && out.trim() === '';
+      throw e;
+    }
+    delete result.done;
+    return result;
   }
 
   async emergencyStop() {

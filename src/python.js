@@ -38,8 +38,10 @@ b.disable_behaviors()
 
 // Always stop the motors and give the robot back its behaviours, even when the
 // script is interrupted (STOP button) or raises.
+// The final `done` marker lets the app know the script really ran to the end, whatever happens to
+// the Bluetooth acknowledgements (see RealRobot.runScript).
 function wrap(body) {
-  const indented = body.trim().split('\n').map((l) => '    ' + l).join('\n');
+  const indented = (body.trim() + '\nout("done", 1)').split('\n').map((l) => '    ' + l).join('\n');
   return `${HEAD}try:\n${indented}\nfinally:\n    m.set_speed(0, 0)\n    b.enable_behaviors()\n`;
 }
 

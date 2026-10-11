@@ -19,8 +19,14 @@ function Header() {
   return (
     <div className="status">
       <span className={`pill pill-${status}`}><i />{mode === 'demo' ? `${t('mode.demo')} · ` : ''}{label}</span>
-      {status === 'connected' && conn.device && <span className="muted small">{conn.device}</span>}
-      {status === 'connected' && r.tel.battery > 0 && <span className="muted small">{t('conn.battery')} {r.tel.battery.toFixed(2)} V</span>}
+      {status === 'connected' && conn.device && <span className="chip">{conn.device}</span>}
+      {status === 'connected' && mode === 'robot' && (
+        <span className="chip" title={conn.firmware ? `ESP32 ${conn.firmware.esp32_ver} · STM32 ${conn.firmware.stm32_ver}` : undefined}>
+          {t('conn.firmware')} {conn.firmware?.esp32_ver || '…'}
+        </span>
+      )}
+      {/* Fixed width + tabular digits: the readout changes all the time and must not move the bar. */}
+      {status === 'connected' && <span className="chip chip-battery">{t('conn.battery')} {r.tel.battery > 0 ? r.tel.battery.toFixed(2) : '–.––'} V</span>}
       {busy && <button type="button" className="btn btn-danger" onClick={r.emergencyStop}>{t('stop')}</button>}
       {mode === 'robot' && status !== 'connected' && (
         <button type="button" className="btn btn-primary" onClick={r.connect} disabled={status === 'connecting' || !supportsBluetooth()}>{t('conn.connect')}</button>

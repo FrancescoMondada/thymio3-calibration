@@ -96,6 +96,8 @@ button, select { font: inherit; color: inherit; }
 .pill i { width: 9px; height: 9px; border-radius: 50%; background: var(--art-line); }
 .pill-connected i { background: var(--ok); }
 .pill-connecting i, .pill-reconnect i { background: var(--warn); }
+.chip { font-size: 13.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chip-battery { display: inline-block; width: 15ch; text-align: right; }
 .langs { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .langs button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-weight: 600; color: var(--muted); }
 .langs button.on { background: var(--accent); color: var(--accent-ink); }

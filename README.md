@@ -74,6 +74,17 @@ hardware:
 
 Issues and corrections are welcome.
 
+### Troubleshooting
+
+- **"Timed out waiting for load ACK" right after connecting.** The robot acknowledges requests with
+  BLE *indications*, and only one can be in flight at a time. The app therefore waits about 2 s after
+  connecting (so the API's own device-info request finishes), asks for the firmware version once, and
+  only then uploads the first script. If an upload acknowledgement is still lost, the script is run
+  anyway (the firmware marks it ready regardless) and checked through an end-of-script marker; if
+  nothing came back, it is re-sent once. If the problem persists, please open an issue with the
+  browser console log.
+- The firmware version is shown in the top bar once connected.
+
 ## Run locally
 
 ```bash
