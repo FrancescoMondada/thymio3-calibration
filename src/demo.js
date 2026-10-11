@@ -121,6 +121,11 @@ export class DemoRobot {
     this.flash.straight = [...this.state.straight];
     return { straight: [...this.state.straight] };
   }
+  async op_straightRestore({ values }) {
+    await sleep(150);
+    this.state.straight = [...values];
+    return { straight: [...values] };
+  }
   async op_straightReset() {
     await sleep(300);
     this.state.straight = [...FACTORY.motors];
@@ -183,7 +188,6 @@ export class DemoRobot {
 
   // ---- gyro rotation scale ----------------------------------------------
   async op_gyroTurn({ measure }) {
-    if (measure) this.state.gyroScale = 0;
     await sleep(2600);
     this.turnErr = TRUE.turnErrorRaw + 4 * this.state.gyroScale; // physical error left after the turn
     this.angleRaw = 0;
@@ -208,7 +212,7 @@ export class DemoRobot {
   }
   async op_gyroScaleSave() {
     await sleep(300);
-    const f = clamp(Math.trunc(-this.angleRaw / 4), -32000, 32000);
+    const f = clamp(this.state.gyroScale + Math.trunc(-this.angleRaw / 4), -32000, 32000); // refines the stored scale
     this.state.gyroScale = f;
     this.flash.gyroScale = f;
     return { gyroScale: f };

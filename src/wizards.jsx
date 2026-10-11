@@ -18,6 +18,16 @@ function useSeed(value, apply) {
   return () => { done.current = true; };
 }
 
+// Trial values are applied to the robot before being saved. If the user leaves the wizard with such
+// unsaved values still applied, put back what the robot had (the firmware menu always writes on exit;
+// here saving is explicit, so leaving means "cancel").
+function useRestoreOnLeave(dirty, restore) {
+  const { ready, run } = useRobot();
+  const ref = useRef({ dirty, restore, ready });
+  ref.current = { dirty, restore, ready };
+  useEffect(() => () => { const c = ref.current; if (c.dirty && c.ready) c.restore(run); }, [run]);
+}
+
 function SaveRow({ children }) { return <div className="row">{children}</div>; }
 
 function FactoryButton({ op, onDone }) {
@@ -37,16 +47,21 @@ function FactoryButton({ op, onDone }) {
 // =============================================================================
 export function StraightWizard({ onExit }) {
   const t = useT();
-  const { run, stored } = useRobot();
+  const { run, stored, ready } = useRobot();
   const [corr, setCorr] = useState(0);
   const [last, setLast] = useState(null);
   const [saved, setSaved] = useState(false);
   const [warn, setWarn] = useState('');
+  const [dirty, setDirty] = useState(false);            // a trial correction is applied but not saved
+  const flash = useRef(null);                           // what the robot had saved when the wizard opened
+  if (!flash.current && stored?.straight) flash.current = [...stored.straight];
+  useRestoreOnLeave(dirty, (runOp) => runOp('straightRestore', { values: flash.current }));
   const touch = useSeed(stored?.straight, (s) => setCorr(clamp(s[0] - MOTOR_BASE, -MOTOR_CORR_MAX, MOTOR_CORR_MAX)));
 
   const adjust = (d) => { touch(); setSaved(false); setCorr((c) => clamp(c + d, -MOTOR_CORR_MAX, MOTOR_CORR_MAX)); };
   const go = async (dir) => {
     setSaved(false);
+    setDirty(true);
     const res = await run('straightRun', { corr, dir });
     setLast(res);
     if (res?.straight && (res.straight[0] !== MOTOR_BASE + corr || res.straight[1] !== MOTOR_BASE - corr)) {
@@ -62,6 +77,7 @@ export function StraightWizard({ onExit }) {
       body: (
         <>
           <NeedRobot />
+          {ready && stored && !stored.straight && <Notice tone="warn">{t('common.noCurrent')}</Notice>}
           <div className="corr">
             <input
               type="range" className="corr-range" min={-MOTOR_CORR_MAX} max={MOTOR_CORR_MAX} step="1" value={corr}
@@ -110,10 +126,10 @@ export function StraightWizard({ onExit }) {
             <Stat label={t('common.stored')}>{fmt(stored?.straight)}</Stat>
           </div>
           <SaveRow>
-            <Btn kind="primary" onClick={async () => setSaved(!!(await run('straightSave', { corr })))}>{t('common.save')}</Btn>
-            <FactoryButton op="straightReset" onDone={() => { setCorr(0); setSaved(true); }} />
+            <Btn kind="primary" onClick={async () => { const r = await run('straightSave', { corr }); if (r) { flash.current = r.straight; setDirty(false); } setSaved(!!r); }}>{t('common.save')}</Btn>
+            <FactoryButton op="straightReset" onDone={(r) => { flash.current = r.straight; setDirty(false); setCorr(0); setSaved(true); }} />
           </SaveRow>
-          {saved && <Notice tone="ok">{t('common.saved')}</Notice>}
+          {saved ? <Notice tone="ok">{t('common.saved')}</Notice> : <p className="muted small">{t('common.leaveRestores')}</p>}
         </>
       ),
     },
@@ -126,7 +142,7 @@ export function StraightWizard({ onExit }) {
 // =============================================================================
 export function DistanceWizard({ onExit }) {
   const t = useT();
-  const { run, stored } = useRobot();
+  const { run, stored, ready } = useRobot();
   const [fw, setFw] = useState(FACTORY.distance[0]);
   const [bw, setBw] = useState(FACTORY.distance[1]);
   const [cm, setCm] = useState({});
@@ -144,6 +160,7 @@ export function DistanceWizard({ onExit }) {
     return (
       <>
         <NeedRobot />
+        {ready && stored && !stored.distance && <Notice tone="warn">{t('common.noCurrent')}</Notice>}
         <div className="stats">
           <Stat label={t('distance.duration')}>{ms(ticks)} ms</Stat>
           <Stat label={t('distance.steps')}>{delta(ticks)}</Stat>
@@ -287,6 +304,7 @@ export function GroundWizard({ onExit }) {
   const [saved, setSaved] = useState(false);
   const snapshot = useRef(null);
   const g = stored?.ground;
+  useRestoreOnLeave(pending, (runOp) => { if (snapshot.current) runOp('groundApply', { values: snapshot.current }); });
 
   const capture = async (kind) => {
     if (!pending && g) snapshot.current = [...g];
@@ -324,7 +342,7 @@ export function GroundWizard({ onExit }) {
             </div>
           )}
           {poorRange && <Notice tone="warn">{t('ground.warnRange')}</Notice>}
-          {pending && <Notice tone="info">{t('ground.pending')}</Notice>}
+          {pending && <Notice tone="info">{t('ground.pending')} {t('common.leaveRestores')}</Notice>}
           <SaveRow>
             <Btn kind="primary" onClick={async () => { if (await run('groundSave')) { setPending(false); setSaved(true); } }}>{t('common.save')}</Btn>
             {pending && snapshot.current && (
@@ -352,6 +370,8 @@ export function GyroWizard({ onExit }) {
   const [angle, setAngle] = useState(null);       // [raw, deg] counted since the end of the turn
   const [errDeg, setErrDeg] = useState(null);     // demo only
   const [scaleSaved, setScaleSaved] = useState(false);
+  // while offsets are measured but not saved, the robot's automatic gyro calibration is switched off
+  useRestoreOnLeave(offPending, (runOp) => runOp('gyroOffsetsCancel'));
 
   const gx = tel.gyro || {};
   const turn = async (measure) => {

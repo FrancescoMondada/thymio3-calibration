@@ -34,6 +34,21 @@ body with a round front and a flat back, 4-hole wheels at the back, flush with t
 sliding point of contact, the colour-sensor slot right behind it and the two IR ground sensors
 close to the front edge.
 
+## Starting point: existing calibrations are kept and refined
+
+Unlike the on-robot menu, which resets several settings to their defaults when you enter a mode, the
+wizards **start from what the robot already stores** (read when you connect):
+
+- **Straight line / 15 cm**: the correction and the durations start at the stored values.
+- **Ground sensors / colour**: white and black are measured independently; measuring one never touches the other.
+- **Gyroscope offsets**: a new resting measurement (replaces the old one, by nature).
+- **Gyroscope rotation scale**: the turn is made with the stored scale and the error you compensate is
+  **added** to it, so another turn refines an existing calibration (the menu restarts from the nominal scale).
+  This incremental rule is a first-order assumption, not documented by the firmware: check it on hardware.
+- Factory values are only applied through the explicit *Factory values* button.
+- Nothing is permanent until *Save*: leaving a wizard with a trial value applied puts back what the robot had.
+  If the current values cannot be read, the wizard says so and starts from the factory values.
+
 ## How values reach the robot
 
 The firmware keeps its calibrations in flash files (`/spiffs/*.dat`, written by `settings.c`).

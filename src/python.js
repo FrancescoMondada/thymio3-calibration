@@ -92,6 +92,9 @@ out("straight", m.get_straight_calibration())`,
   straightSave: ({ corr }) => `m.set_straight_calibration(${MOTOR_BASE + int(corr)}, ${MOTOR_BASE - int(corr)})
 m.save_straight_calibration()
 out("straight", m.get_straight_calibration())`,
+  // Put back (in RAM only) what the robot had saved, when leaving without saving.
+  straightRestore: ({ values }) => `m.set_straight_calibration(${int(values[0])}, ${int(values[1])})
+out("straight", m.get_straight_calibration())`,
   straightReset: () => `m.reset_straight_calibration()
 m.save_straight_calibration()
 out("straight", m.get_straight_calibration())`,
@@ -136,7 +139,7 @@ out("gyroOffsets", list(i.get_gyro_calib()))`,
   //                -360°, then the angle is zeroed so the nudges are counted.
   // measure=false: verification turn with the stored scale; the angle left
   //                over at the end is reported.
-  gyroTurn: ({ measure }) => `${measure ? 'i.set_gyro_scale_calib(0)\n' : ''}i.reset_angle()
+  gyroTurn: ({ measure }) => `i.reset_angle()
 i.rotate_deg(-360, ${MOVE_SPEED})
 t = time.ticks_ms()
 while not i.rotation_completed():
@@ -152,9 +155,11 @@ time.sleep_ms(400)
 ${angleOut}`,
   // Precise angle counted since the end of the turn (nudges and/or hand rotation).
   gyroAngle: () => angleOut,
-  // factor = -angle / 4 : the residual is shared by the four quarter turns.
+  // The turn is made with the scale currently stored, so the residual is a correction to ADD to it
+  // (the firmware menu restarts from the nominal scale: factor = -angle / 4 with a current factor of 0).
+  // The residual is shared by the four quarter turns.
   gyroScaleSave: () => `a = i.get_angle_raw()
-f = int(-a / 4)
+f = i.get_gyro_scale_calib() + int(-a / 4)
 f = max(-32000, min(32000, f))
 i.set_gyro_scale_calib(f)
 i.save_gyro_scale_calib()
