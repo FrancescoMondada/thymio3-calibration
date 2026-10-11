@@ -26,7 +26,11 @@ function Header() {
         </span>
       )}
       {/* Fixed width + tabular digits: the readout changes all the time and must not move the bar. */}
-      {status === 'connected' && <span className="chip chip-battery">{t('conn.battery')} {r.tel.battery > 0 ? r.tel.battery.toFixed(2) : '–.––'} V</span>}
+      {status === 'connected' && (() => {
+        // live value when the "others" stream runs, otherwise the one read with the settings
+        const v = r.tel.battery > 0 ? r.tel.battery : (r.stored?.battery > 0 ? r.stored.battery / 1000 : 0);
+        return <span className="chip chip-battery">{t('conn.battery')} {v > 0 ? v.toFixed(2) : '–.––'} V</span>;
+      })()}
       {busy && <button type="button" className="btn btn-danger" onClick={r.emergencyStop}>{t('stop')}</button>}
       {mode === 'robot' && status !== 'connected' && (
         <button type="button" className="btn btn-primary" onClick={r.connect} disabled={status === 'connecting' || !supportsBluetooth()}>{t('conn.connect')}</button>
@@ -174,7 +178,7 @@ function CommLog() {
 
 function Shell() {
   const t = useT();
-  const { error, clearError, busy, conn, log } = useRobot();
+  const { error, clearError, busy, conn, log, retryLive } = useRobot();
   const [view, setView] = useState('home');
   const wiz = WIZARDS.find((w) => w.id === view);
   return (
@@ -183,6 +187,12 @@ function Shell() {
       <DemoBar />
       <main>
         {busy && <div className="busy" role="status"><span className="spinner" />{conn.initializing ? t('busy.init') : t('busy')}</div>}
+        {conn.liveBlocked && (
+          <Notice tone="warn">
+            {t('live.blocked')}{' '}
+            <button type="button" className="link-btn" onClick={retryLive}>{t('live.retry')}</button>
+          </Notice>
+        )}
         {error && (
           <Notice tone="danger">
             <b>{t('error.title')}</b> — {error}{' '}

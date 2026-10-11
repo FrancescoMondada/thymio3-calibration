@@ -79,7 +79,8 @@ rd("distance", lambda: m.get_distance_calibration())
 rd("color", lambda: c.get_calibration())
 rd("gyroOffsets", lambda: list(i.get_gyro_calib()))
 rd("gyroScale", lambda: i.get_gyro_scale_calib())
-rd("ground", lambda: rg())`,
+rd("ground", lambda: rg())
+rd("battery", lambda: thymio.get_battery_voltage())`,
 
   // ---- motors: straight line --------------------------------------------
   // Settings.Motors = [256 + correction, 256 - correction] (TuneMotors()).

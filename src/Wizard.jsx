@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useT } from './i18n.js';
 import { Icon } from './art.jsx';
 import { Notice } from './ui.jsx';
@@ -8,12 +8,15 @@ import { useRobot } from './useRobot.jsx';
 const rich = (text) => text.split('**').map((part, k) => (k % 2 ? <strong key={k}>{part}</strong> : part));
 
 // Generic step-by-step shell: illustration + instructions + the controls of
-// the step. `steps[i]` = { title, text, tip, art, body }.
+// the step. `steps[i]` = { title, text, tip, art, body, live } where `live` is the sensor
+// stream the step needs: 'main' | 'others' | undefined.
 export function Wizard({ icon, title, intro, steps, onExit }) {
   const t = useT();
-  const { mode } = useRobot();
+  const { mode, setLive } = useRobot();
   const [index, setIndex] = useState(0);
   const step = steps[index];
+  // Live sensor readings only while a step needs them (one stream at a time, see RealRobot).
+  useEffect(() => { setLive(step.live || null); return () => setLive(null); }, [step.live, setLive]);
   const last = index === steps.length - 1;
 
   return (

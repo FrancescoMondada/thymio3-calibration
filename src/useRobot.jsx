@@ -4,7 +4,7 @@ import { RealRobot, DemoBackend } from './robot.js';
 const RobotCtx = createContext(null);
 export const useRobot = () => useContext(RobotCtx);
 
-const STORED_KEYS = ['straight', 'distance', 'color', 'gyroOffsets', 'gyroScale', 'ground'];
+const STORED_KEYS = ['straight', 'distance', 'color', 'gyroOffsets', 'gyroScale', 'ground', 'battery'];
 
 export function RobotProvider({ children }) {
   // "?demo" in the URL starts the simulated robot straight away (used by the live demo link).
@@ -103,6 +103,8 @@ export function RobotProvider({ children }) {
   const connectFromDemo = useCallback(() => { pendingConnect.current = true; leaveDemo(); }, [leaveDemo]);
   const setSurface = useCallback((s) => { setSurfaceState(s); backend.current?.setSurface?.(s); }, []);
   const emergencyStop = useCallback(() => backend.current?.emergencyStop?.(), []);
+  const setLive = useCallback((kind) => backend.current?.setLive?.(kind), []);
+  const retryLive = useCallback(() => backend.current?.retryLive?.(), []);
 
   const ready = conn.status === 'connected';
   // Read everything the robot stores as soon as we are connected.
@@ -112,10 +114,10 @@ export function RobotProvider({ children }) {
 
   const value = useMemo(() => ({
     mode, conn, tel, stored, busy, error, surface, ready, log, clearLog: () => setLog([]),
-    run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop,
+    run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop, setLive, retryLive,
     clearError: () => setError(''),
     refresh: () => run('readAll'),
-  }), [mode, conn, tel, stored, busy, error, surface, ready, log, run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop]);
+  }), [mode, conn, tel, stored, busy, error, surface, ready, log, run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop, setLive, retryLive]);
 
   return <RobotCtx.Provider value={value}>{children}</RobotCtx.Provider>;
 }

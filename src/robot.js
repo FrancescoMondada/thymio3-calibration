@@ -36,6 +36,13 @@ export class RealRobot {
     this.emit = emit;
     this.t0 = Date.now();
     this.chain = Promise.resolve();
+    // Live sensor streaming. The firmware pushes 50 notifications/s per stream through only 12 BLE
+    // buffers (CONFIG_NIMBLE_MSYS1_BLOCK_COUNT): at 100/s a slow link runs out in about a second, and
+    // then requests, indications and uploads all stall. So streaming is off by default, only ONE
+    // stream runs at a time, only while a step needs it, and never during a script upload.
+    this.live = null;         // wanted: 'main' | 'others' | null
+    this.liveOn = null;       // what is running on the robot
+    this.liveBlocked = false; // set when the firmware starts sending empty notifications (buffers exhausted)
     this.tel = { ground: {}, reflected: {}, ambient: {}, colorRaw: {}, hsv: {}, gyro: {}, buttons: {} };
   }
 
@@ -49,7 +56,17 @@ export class RealRobot {
   start() {
     this.note('ready');
     // The API handles notifications in async handlers whose failures are otherwise silent: keep a trace.
-    this.onRejection = (e) => { this.note(`UNHANDLED ERROR (API): ${e.reason?.name || ''} ${e.reason?.message || e.reason}`); };
+    this.onRejection = (e) => {
+      this.note(`UNHANDLED ERROR (API): ${e.reason?.name || ''} ${e.reason?.message || e.reason}`);
+      // An empty sensor notification (RangeError in the API's stream handler) means the firmware ran out
+      // of BLE buffers: stop streaming before it takes the whole link down.
+      if (this.liveOn && e.reason?.name === 'RangeError' && !this.liveBlocked) {
+        this.liveBlocked = true;
+        this.note('live readings suspended: the Bluetooth link cannot keep up with the sensor stream');
+        this.emit('conn', { liveBlocked: true });
+        this.queueSync(0);
+      }
+    };
     window.addEventListener('unhandledrejection', this.onRejection);
     this.onLoadResult = (e) => this.note(`upload result: code ${e.detail?.code} (${e.detail?.message})`);
     document.addEventListener('thymio-python-load-result', this.onLoadResult);
@@ -59,8 +76,8 @@ export class RealRobot {
         // Queue the settle phase FIRST: everything that talks to the robot waits behind it (see op()),
         // including a script requested by the UI as soon as it sees the connection.
         this.chain = this.chain.then(() => this.settle()).catch(() => {});
+        this.liveOn = null;
         this.emit('conn', { status: 'connected', device: thymio.getDeviceName?.() || 'THYMIO 3', firmware: null });
-        try { await thymio.startAllSensorStreaming(); } catch (err) { console.warn('sensor streaming failed', err); }
       } else {
         this.emit('conn', { status: 'disconnected' });
       }
@@ -108,6 +125,40 @@ export class RealRobot {
 
   push() { this.emit('tel', { ...this.tel, fresh: true }); }
 
+  // ---- live streaming -------------------------------------------------------------------------
+  setLive(kind) { this.live = kind || null; this.queueSync(200); }   // debounced: steps change quickly
+  retryLive() { this.liveBlocked = false; this.emit('conn', { liveBlocked: false }); this.queueSync(0); }
+  queueSync(delay) {
+    clearTimeout(this.syncTimer);
+    this.syncTimer = setTimeout(() => { this.chain = this.chain.then(() => this.syncLive()).catch(() => {}); }, delay);
+  }
+  async syncLive() {
+    const want = this.liveBlocked ? null : this.live;
+    if (want === this.liveOn) return;
+    try {
+      if (want === 'main') await withTimeout(thymio.startMainSensorStreaming(), 4000);
+      else if (want === 'others') await withTimeout(thymio.startSecondarySensorStreaming(), 4000);
+      else await withTimeout(thymio.stopSensorStreaming(), 4000);
+      this.liveOn = want;
+      this.note(`live readings: ${want ? `stream "${want}" on` : 'off'}`);
+      if (!want) this.clearLiveTelemetry();
+    } catch (err) {
+      this.note(`live readings: could not switch to ${want || 'off'} (${err?.message || err})`);
+    }
+  }
+  // Stop streaming and give the firmware time to drain what is already queued.
+  async pauseLive() {
+    if (!this.liveOn) return;
+    try { await withTimeout(thymio.stopSensorStreaming(), 4000); } catch (err) { this.note(`could not pause streaming (${err?.message || err})`); }
+    this.liveOn = null;
+    this.note('live readings paused for the script');
+    await sleep(500);
+  }
+  clearLiveTelemetry() {
+    Object.assign(this.tel, { ground: {}, reflected: {}, ambient: {}, colorRaw: {}, hsv: {}, gyro: {}, buttons: {}, angleDeg: undefined, colorCss: undefined });
+    this.push();
+  }
+
   // The robot answers some requests (device info, script upload acknowledgement…) with BLE
   // *indications*, and only one indication can be in flight at a time: when two overlap, one is lost.
   // The API itself asks for the device info right after connecting, so let that finish first, then
@@ -135,8 +186,11 @@ export class RealRobot {
 
   // Scripts run one at a time: the robot refuses a second one while one runs.
   op(name, args) {
-    const job = this.chain.then(() => this.runWithRetry(buildScript(name, args), name));
-    this.chain = job.catch(() => {});
+    const job = this.chain.then(async () => {
+      await this.pauseLive();
+      return this.runWithRetry(buildScript(name, args), name);
+    });
+    this.chain = job.catch(() => {}).then(() => this.syncLive()).catch(() => {}); // resume live readings afterwards
     return job;
   }
 
@@ -232,5 +286,7 @@ export class DemoBackend {
   async disconnect() {}
   op(name, args) { return this.demo.op(name, args); }
   setSurface(s) { this.demo.setSurface(s); }
+  setLive() {}
+  retryLive() {}
   async emergencyStop() {}
 }

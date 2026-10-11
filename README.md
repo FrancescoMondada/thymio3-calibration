@@ -88,6 +88,15 @@ Issues and corrections are welcome.
   "script terminated" notification does not wait for it. The app waits for the script's end marker (padded
   to over 100 bytes so the firmware flushes at once) before reading the result. Each setting is also read on
   its own, so a firmware that lacks one function still shows the others and lists the unreadable ones.
+- **Everything stalls: device-info request without answer, upload frozen for 30 s, then the robot disconnects;
+  `RangeError: Offset is outside the bounds of the DataView` in the console.** Cause (found in the firmware
+  sources): each sensor stream pushes 50 notifications/s through only 12 BLE buffers
+  (`CONFIG_NIMBLE_MSYS1_BLOCK_COUNT=12`). Both streams (100/s) exhaust them within about a second on a slow
+  link; the firmware then sends empty notifications (the `RangeError`) and no request or indication gets
+  through. The app therefore **does not stream at connection**, runs **one stream at a time and only in the
+  steps that show live values**, **pauses streaming during every script**, and **suspends live readings
+  automatically** (with a *Retry* button) if it sees an empty notification. The battery voltage is read with
+  the settings instead of streamed.
 - **Anything else.** Open *Communication log* at the bottom of the page (real robot only), press *Copy* and
   paste it in the issue: it lists every step with timestamps (connection, upload, acknowledgement, script
   output, errors raised inside the Thymio API).

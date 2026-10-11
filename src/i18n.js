@@ -38,6 +38,8 @@ const fr = {
   'log.title': 'Journal de communication (à copier en cas de problème)',
   'log.copy': 'Copier', 'log.copied': 'Copié', 'log.clear': 'Effacer',
   'log.empty': 'Aucun échange pour l’instant.',
+  'live.blocked': 'Mesures en direct suspendues : la liaison Bluetooth n’arrive pas à suivre le flux de capteurs du robot. Les calibrations restent possibles.',
+  'live.retry': 'Réessayer',
   'log.ping': 'Tester la communication',
   'log.pingHint': 'Envoie un script minimal (deux lignes affichées) pour vérifier l’aller-retour Bluetooth',
 
@@ -240,6 +242,8 @@ const en = {
   'log.title': 'Communication log (copy it when something goes wrong)',
   'log.copy': 'Copy', 'log.copied': 'Copied', 'log.clear': 'Clear',
   'log.empty': 'No exchange yet.',
+  'live.blocked': 'Live readings suspended: the Bluetooth link cannot keep up with the robot’s sensor stream. Calibrations still work.',
+  'live.retry': 'Retry',
   'log.ping': 'Test the communication',
   'log.pingHint': 'Sends a minimal script (prints two lines) to check the Bluetooth round trip',
 

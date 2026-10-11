@@ -211,7 +211,7 @@ export function ColorWizard({ onExit }) {
   const steps = [
     { title: t('color.s1.title'), text: t('color.s1.text'), tip: t('color.s1.tip'), art: <ColorArt label={t('color.s1.title')} kind="white" /> },
     {
-      title: t('color.s2.title'), text: t('color.s2.text'), art: <ColorArt label={t('color.s2.title')} kind="white" />,
+      live: 'others', title: t('color.s2.title'), text: t('color.s2.text'), art: <ColorArt label={t('color.s2.title')} kind="white" />,
       body: (
         <>
           <NeedRobot />
@@ -224,7 +224,7 @@ export function ColorWizard({ onExit }) {
       ),
     },
     {
-      title: t('color.s3.title'), text: t('color.s3.text'), art: <ColorArt label={t('color.s3.title')} kind="black" />,
+      live: 'others', title: t('color.s3.title'), text: t('color.s3.text'), art: <ColorArt label={t('color.s3.title')} kind="black" />,
       body: (
         <>
           <NeedRobot />
@@ -237,7 +237,7 @@ export function ColorWizard({ onExit }) {
       ),
     },
     {
-      title: t('color.s4.title'), text: t('color.s4.text'), art: <ColorArt label={t('color.s4.title')} kind="white" />,
+      live: 'main', title: t('color.s4.title'), text: t('color.s4.text'), art: <ColorArt label={t('color.s4.title')} kind="white" />,
       body: (
         <>
           <NeedRobot />
@@ -305,10 +305,10 @@ export function GroundWizard({ onExit }) {
 
   const steps = [
     { title: t('ground.s1.title'), text: t('ground.s1.text'), tip: t('ground.s1.tip'), art: <GroundArt label={t('ground.s1.title')} kind="white" /> },
-    { title: t('ground.s2.title'), text: t('ground.s2.text'), art: <GroundArt label={t('ground.s2.title')} kind="white" />, body: captureStep('white') },
-    { title: t('ground.s3.title'), text: t('ground.s3.text'), art: <GroundArt label={t('ground.s3.title')} kind="black" />, body: captureStep('black') },
+    { live: 'main', title: t('ground.s2.title'), text: t('ground.s2.text'), art: <GroundArt label={t('ground.s2.title')} kind="white" />, body: captureStep('white') },
+    { live: 'main', title: t('ground.s3.title'), text: t('ground.s3.text'), art: <GroundArt label={t('ground.s3.title')} kind="black" />, body: captureStep('black') },
     {
-      title: t('ground.s4.title'), text: t('ground.s4.text'), art: <GroundArt label={t('ground.s4.title')} kind="white" />,
+      live: 'main', title: t('ground.s4.title'), text: t('ground.s4.text'), art: <GroundArt label={t('ground.s4.title')} kind="white" />,
       body: (
         <>
           <NeedRobot />
@@ -373,7 +373,7 @@ export function GyroWizard({ onExit }) {
 
   const steps = [
     {
-      title: t('gyro.s1.title'), text: t('gyro.s1.text'), tip: t('gyro.s1.tip'), art: <GyroStillArt label={t('gyro.s1.title')} />,
+      live: 'main', title: t('gyro.s1.title'), text: t('gyro.s1.text'), tip: t('gyro.s1.tip'), art: <GyroStillArt label={t('gyro.s1.title')} />,
       body: (
         <div className="live">
           <div className="live-title">{t('gyro.rawNow')}</div>
@@ -409,7 +409,7 @@ export function GyroWizard({ onExit }) {
     },
     { title: t('gyro.s3.title'), text: t('gyro.s3.text'), tip: t('gyro.s3.tip'), art: <GyroTurnArt label={t('gyro.s3.title')} stage="start" /> },
     {
-      title: t('gyro.s4.title'), text: t('gyro.s4.text'), tip: t('gyro.s4.tip'), art: <GyroTurnArt label={t('gyro.s4.title')} stage={turned ? 'after' : 'start'} error={shownErr} />,
+      live: 'others', title: t('gyro.s4.title'), text: t('gyro.s4.text'), tip: t('gyro.s4.tip'), art: <GyroTurnArt label={t('gyro.s4.title')} stage={turned ? 'after' : 'start'} error={shownErr} />,
       body: (
         <>
           <NeedRobot />
