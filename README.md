@@ -83,6 +83,11 @@ Issues and corrections are welcome.
   anyway (the firmware marks it ready regardless) and checked through an end-of-script marker; if
   nothing came back, it is re-sent once. If the problem persists, please open an issue with the
   browser console log.
+- **Settings cannot be read although the script ran ("Script terminated normally").** The firmware buffers
+  what a script prints and only sends it once 100 bytes have accumulated or after 1 s of silence, and the
+  "script terminated" notification does not wait for it. The app waits for the script's end marker (padded
+  to over 100 bytes so the firmware flushes at once) before reading the result. Each setting is also read on
+  its own, so a firmware that lacks one function still shows the others and lists the unreadable ones.
 - The firmware version is shown in the top bar once connected.
 
 ## Run locally

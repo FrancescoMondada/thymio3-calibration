@@ -57,6 +57,8 @@ export function RobotProvider({ children }) {
     setStored((prev) => {
       const next = { ...(prev || {}) };
       for (const k of STORED_KEYS) if (res && res[k] !== undefined) next[k] = res[k];
+      if (res && 'errors' in res) next.readErrors = res.errors;       // settings this firmware could not read
+      else if (res && Object.keys(res).some((k) => STORED_KEYS.includes(k))) delete next.readErrors;
       return next;
     });
   }, []);

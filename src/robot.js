@@ -25,6 +25,7 @@ function hsvToCss(h, s, v) {
   return `rgb(${Math.round((r + m) * 255)},${Math.round((g + m) * 255)},${Math.round((b + m) * 255)})`;
 }
 
+const STDOUT_GRACE_MS = 4000;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const withTimeout = (promise, ms) => Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
@@ -154,7 +155,11 @@ export class RealRobot {
         done,
         new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('Timeout: the robot did not finish the script')), timeoutMs); }),
       ]);
-      await sleep(200); // let the last stdout notifications arrive
+      // "Script terminated" can arrive well before the script's output (the firmware buffers it for up
+      // to a second): wait for the end marker, or for a Python error, before reading the result.
+      const t0 = Date.now();
+      while (!/@@done\b|Traceback|\w+Error:/.test(out) && Date.now() - t0 < STDOUT_GRACE_MS) await sleep(50);
+      await sleep(100); // trailing fragments
     } catch (err) {
       try { await thymio.stopScriptExecution(); } catch { /* ignore */ }
       throw err;
@@ -168,14 +173,13 @@ export class RealRobot {
       throw new Error(`Robot: ${line}`);
     }
     const result = parseOutput(out);
-    if (!result.done) {
+    if (!/@@done\b/.test(out)) {
       const e = new Error(ackLost
         ? 'The robot did not acknowledge the script upload (Bluetooth). Wait a few seconds and try again.'
         : 'The robot did not run the script to the end.');
       e.retry = ackLost && out.trim() === '';
       throw e;
     }
-    delete result.done;
     return result;
   }
 

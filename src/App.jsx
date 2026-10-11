@@ -104,6 +104,9 @@ function Stored() {
         <h3>{t('home.stored')}</h3>
         <button type="button" className="btn btn-ghost" onClick={refresh} disabled={!ready || busy}>{t('home.refresh')}</button>
       </div>
+      {stored?.readErrors && (
+        <Notice tone="warn">{t('home.readErrors')} {Object.keys(stored.readErrors).join(', ')}</Notice>
+      )}
       <dl>
         {rows.map(([key, label, factory]) => {
           const v = stored?.[key];

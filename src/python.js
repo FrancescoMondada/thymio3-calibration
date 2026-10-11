@@ -40,8 +40,13 @@ b.disable_behaviors()
 // script is interrupted (STOP button) or raises.
 // The final `done` marker lets the app know the script really ran to the end, whatever happens to
 // the Bluetooth acknowledgements (see RealRobot.runScript).
+//
+// The firmware sends what a script prints only once 100 bytes have accumulated, or after 1 s without
+// new output (ble_stdout_task), and the "script terminated" notification does not wait for it. The
+// marker is therefore padded to more than 100 bytes, which makes the firmware flush everything at once
+// instead of leaving the last lines sitting in its buffer for a second.
 function wrap(body) {
-  const indented = (body.trim() + '\nout("done", 1)').split('\n').map((l) => '    ' + l).join('\n');
+  const indented = (body.trim() + '\nprint("@@done " + "." * 110)').split('\n').map((l) => '    ' + l).join('\n');
   return `${HEAD}try:\n${indented}\nfinally:\n    m.set_speed(0, 0)\n    b.enable_behaviors()\n`;
 }
 
@@ -55,12 +60,23 @@ const angleOut = `out("angle", [i.get_angle_raw(), i.get_angle_deg()])`;
 
 export const SCRIPTS = {
   // ---- everything currently stored in the robot -------------------------
-  readAll: () => `out("straight", m.get_straight_calibration())
-out("distance", m.get_distance_calibration())
-out("color", c.get_calibration())
-out("gyroOffsets", list(i.get_gyro_calib()))
-out("gyroScale", i.get_gyro_scale_calib())
-${readGround}`,
+  // Each value is read on its own: an older firmware may lack a function, and one failure must not
+  // hide the other settings (a missing one is reported as "<name>Err").
+  readAll: () => `def rd(k, f):
+    try:
+        out(k, f())
+    except Exception as e:
+        out(k + "Err", repr(e))
+def rg():
+    a = g0.get_calibration()
+    d = g1.get_calibration()
+    return [a[0], d[0], a[1], d[1]]
+rd("straight", lambda: m.get_straight_calibration())
+rd("distance", lambda: m.get_distance_calibration())
+rd("color", lambda: c.get_calibration())
+rd("gyroOffsets", lambda: list(i.get_gyro_calib()))
+rd("gyroScale", lambda: i.get_gyro_scale_calib())
+rd("ground", lambda: rg())`,
 
   // ---- motors: straight line --------------------------------------------
   // Settings.Motors = [256 + correction, 256 - correction] (TuneMotors()).
@@ -186,6 +202,7 @@ export function parseOutput(text) {
   for (const line of text.split(/\r?\n/)) {
     const m = /^@@(\w+) (.*)$/.exec(line.trim());
     if (!m) continue;
+    if (/Err$/.test(m[1])) { (result.errors ||= {})[m[1].slice(0, -3)] = m[2]; continue; }
     try { result[m[1]] = JSON.parse(m[2].replace(/\(/g, '[').replace(/\)/g, ']')); } catch { /* ignore */ }
   }
   return result;
