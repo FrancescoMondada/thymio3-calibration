@@ -2,11 +2,11 @@ import React from 'react';
 import { useRobot } from './useRobot.jsx';
 import { useT } from './i18n.js';
 
-export function Btn({ children, onClick, kind = 'default', disabled, title, wide, needsRobot = true }) {
+export function Btn({ children, onClick, kind = 'default', disabled, title, wide, big, needsRobot = true }) {
   const { ready, busy } = useRobot();
   const off = disabled || busy || (needsRobot && !ready);
   return (
-    <button type="button" className={`btn btn-${kind}${wide ? ' btn-wide' : ''}`} onClick={onClick} disabled={off} title={title}>
+    <button type="button" className={`btn btn-${kind}${wide ? ' btn-wide' : ''}${big ? ' btn-big' : ''}`} onClick={onClick} disabled={off} title={title}>
       {children}
     </button>
   );

@@ -14,7 +14,27 @@ so there is something to calibrate); nothing is written to any real robot in dem
 switch to a real robot at any time with *Connect robot*. To use a real robot, open the app in **Google Chrome or Microsoft Edge** (Web Bluetooth is not
 available in Firefox or Safari; the app shows a prominent warning there) and click *Connect robot*. The interface is available in French and English.
 
-## The five wizards
+## Two versions of the interface
+
+The switch in the top bar (**Normal | Expert**) chooses the version; the choice is remembered, and
+`?mode=expert` / `?mode=normal` in the address forces it. **Normal is the default.**
+
+| | **Normal** (default, for non-technical users) | **Expert** |
+|---|---|---|
+| Steps per calibration | 2–3: prepare → act → done | 3–5 with the details |
+| Values | none shown | stored values, live readings, correction slider… |
+| Factory values | none | explicit button in every wizard |
+| Intermediate measurements | none: plain questions instead (*did it go straight?*) | live sensors, test runs with numbers |
+| Saving | automatic at the end of the flow | explicit *Save* |
+| Diagnostics | none | firmware, battery, communication log |
+
+Both versions send the same operations to the robot, so the stored result is the same kind of value.
+In Normal, straight line and distance converge by **halving the step each time the answer flips**
+(*veered left → veered right* …), the gyroscope runs the offsets measurement and the full turn from a
+single *Start*, and the ground sensors refuse a measurement where white and black are not clearly different.
+The Normal version is a first draft meant to be refined with user testing.
+
+## The five wizards (Expert)
 
 | # | Wizard | What it calibrates |
 |---|---|---|

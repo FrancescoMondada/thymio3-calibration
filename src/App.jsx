@@ -3,7 +3,8 @@ import { I18nContext, LANGS, initialLang, makeT, useT } from './i18n.js';
 import { RobotProvider, useRobot } from './useRobot.jsx';
 import { supportsBluetooth } from './robot.js';
 import { SURFACES } from './demo.js';
-import { WIZARDS } from './wizards.jsx';
+import { WIZARDS } from './registry.js';
+import { UiModeProvider, useUiMode } from './ui-mode.jsx';
 import { Icon } from './art.jsx';
 import { Notice, fmt } from './ui.jsx';
 import { FACTORY } from './python.js';
@@ -14,19 +15,20 @@ function Header() {
   const t = useT();
   const r = useRobot();
   const { conn, mode, busy } = r;
+  const expert = useUiMode().uiMode === 'expert';
   const status = conn.status;
   const label = { connected: t('conn.connected'), connecting: t('conn.connecting'), reconnect: t('conn.reconnect'), disconnected: t('conn.disconnected') }[status] || t('conn.disconnected');
   return (
     <div className="status">
       <span className={`pill pill-${status}`}><i />{mode === 'demo' ? `${t('mode.demo')} · ` : ''}{label}</span>
-      {status === 'connected' && conn.device && <span className="chip">{conn.device}</span>}
-      {status === 'connected' && mode === 'robot' && (
+      {expert && status === 'connected' && conn.device && <span className="chip">{conn.device}</span>}
+      {expert && status === 'connected' && mode === 'robot' && (
         <span className="chip" title={conn.firmware ? `ESP32 ${conn.firmware.esp32_ver} · STM32 ${conn.firmware.stm32_ver}` : undefined}>
           {t('conn.firmware')} {conn.firmware?.esp32_ver || '…'}
         </span>
       )}
       {/* Fixed width + tabular digits: the readout changes all the time and must not move the bar. */}
-      {status === 'connected' && (() => {
+      {expert && status === 'connected' && (() => {
         // live value when the "others" stream runs, otherwise the one read with the settings
         const v = r.tel.battery > 0 ? r.tel.battery : (r.stored?.battery > 0 ? r.stored.battery / 1000 : 0);
         return <span className="chip chip-battery">{t('conn.battery')} {v > 0 ? v.toFixed(2) : '–.––'} V</span>;
@@ -36,13 +38,26 @@ function Header() {
         <button type="button" className="btn btn-primary" onClick={r.connect} disabled={status === 'connecting' || !supportsBluetooth()}>{t('conn.connect')}</button>
       )}
       {mode === 'robot' && status === 'connected' && <button type="button" className="btn btn-ghost" onClick={r.disconnect}>{t('conn.disconnect')}</button>}
-      {mode === 'robot' && status !== 'connected' && <button type="button" className="btn btn-ghost" onClick={r.enterDemo}>{t('mode.demo')}</button>}
+      {expert && mode === 'robot' && status !== 'connected' && <button type="button" className="btn btn-ghost" onClick={r.enterDemo}>{t('mode.demo')}</button>}
       {mode === 'demo' && (
         <>
           <button type="button" className="btn btn-primary" onClick={r.connectFromDemo} disabled={!supportsBluetooth()}>{t('conn.connect')}</button>
           <button type="button" className="btn btn-ghost" onClick={r.leaveDemo}>{t('mode.leaveDemo')}</button>
         </>
       )}
+    </div>
+  );
+}
+
+// Normal (default) / Expert switch.
+function ModeSwitch() {
+  const t = useT();
+  const { uiMode, setUiMode } = useUiMode();
+  return (
+    <div className="langs ui-switch" role="group" aria-label={t('mode.ui')}>
+      {['normal', 'expert'].map((m) => (
+        <button key={m} type="button" className={m === uiMode ? 'on' : ''} aria-pressed={m === uiMode} onClick={() => setUiMode(m)}>{t(`mode.${m}`)}</button>
+      ))}
     </div>
   );
 }
@@ -128,6 +143,37 @@ function Stored() {
   );
 }
 
+// Home of the normal version: connect, then pick what to adjust. No values, no jargon.
+function NormalHome({ onOpen }) {
+  const t = useT();
+  const { ready, conn, connect, mode, enterDemo } = useRobot();
+  return (
+    <>
+      <h2 className="n-home-title">{t('n.homeTitle')}</h2>
+      {!ready && mode === 'robot' && (
+        <section className="card n-connect">
+          <div>
+            <h3>{t('n.connectTitle')}</h3>
+            <p>{t('n.connectText')}</p>
+          </div>
+          <button type="button" className="btn btn-primary btn-big" onClick={connect} disabled={conn.status === 'connecting' || !supportsBluetooth()}>{t('n.connect')}</button>
+        </section>
+      )}
+      {conn.error && <Notice tone="danger">{conn.error}</Notice>}
+      <div className="cards cards-normal">
+        {WIZARDS.map((w) => (
+          <button key={w.id} type="button" className="card card-wiz" onClick={() => onOpen(w.id)}>
+            <span className="card-icon"><Icon name={w.icon} /></span>
+            <span className="card-title">{t(w.nTitleKey)}</span>
+            <span className="card-desc">{t(w.nDescKey)}</span>
+          </button>
+        ))}
+      </div>
+      {!ready && mode === 'robot' && <p className="n-try"><button type="button" className="link-btn" onClick={enterDemo}>{t('n.try')}</button></p>}
+    </>
+  );
+}
+
 function Home({ onOpen }) {
   const t = useT();
   const { ready, conn } = useRobot();
@@ -179,15 +225,19 @@ function CommLog() {
 function Shell() {
   const t = useT();
   const { error, clearError, busy, conn, log, retryLive } = useRobot();
+  const { uiMode } = useUiMode();
+  const expert = uiMode === 'expert';
   const [view, setView] = useState('home');
+  useEffect(() => { setView('home'); }, [uiMode]);       // switching version goes back to the home page
   const wiz = WIZARDS.find((w) => w.id === view);
+  const Wiz = wiz ? (expert ? wiz.Comp : wiz.NComp) : null;
   return (
     <div className="shell">
       <BrowserWarning />
       <DemoBar />
       <main>
         {busy && <div className="busy" role="status"><span className="spinner" />{conn.initializing ? t('busy.init') : t('busy')}</div>}
-        {conn.liveBlocked && (
+        {expert && conn.liveBlocked && (
           <Notice tone="warn">
             {t('live.blocked')}{' '}
             <button type="button" className="link-btn" onClick={retryLive}>{t('live.retry')}</button>
@@ -196,14 +246,14 @@ function Shell() {
         {error && (
           <Notice tone="danger">
             <b>{t('error.title')}</b> — {error}{' '}
-            <span className="muted small">{t('error.seeLog')}</span>{' '}
+            {expert && <span className="muted small">{t('error.seeLog')}</span>}{' '}
             <button type="button" className="link-btn" onClick={clearError}>{t('error.dismiss')}</button>
-            {log.length > 0 && <pre className="errlog">{log.slice(-10).join('\n')}</pre>}
+            {expert && log.length > 0 && <pre className="errlog">{log.slice(-10).join('\n')}</pre>}
           </Notice>
         )}
-        {wiz ? <wiz.Comp key={wiz.id} onExit={() => setView('home')} /> : <Home onOpen={setView} />}
+        {Wiz ? <Wiz key={`${wiz.id}-${uiMode}`} onExit={() => setView('home')} /> : (expert ? <Home onOpen={setView} /> : <NormalHome onOpen={setView} />)}
       </main>
-      <CommLog />
+      {expert && <CommLog />}
       <footer className="muted small">{t('footer.credit')}</footer>
     </div>
   );
@@ -220,6 +270,7 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={{ lang, t }}>
+      <UiModeProvider>
       <RobotProvider>
         <header className="top">
           <div className="brand">
@@ -230,6 +281,7 @@ export default function App() {
             </div>
           </div>
           <Header />
+          <ModeSwitch />
           <div className="langs" role="group" aria-label="Language">
             {LANGS.map((l) => (
               <button key={l.id} type="button" className={l.id === lang ? 'on' : ''} onClick={() => setLang(l.id)}>{l.label}</button>
@@ -238,6 +290,7 @@ export default function App() {
         </header>
         <Shell />
       </RobotProvider>
+      </UiModeProvider>
     </I18nContext.Provider>
   );
 }

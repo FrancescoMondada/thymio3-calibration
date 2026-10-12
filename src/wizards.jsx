@@ -9,7 +9,7 @@ import { FACTORY, MOTOR_BASE, MOTOR_CORR_MAX, DIST_STEP, TICKS_PER_MS } from './
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // Re-initialise a local value once, when the robot's stored value first shows up.
-function useSeed(value, apply) {
+export function useSeed(value, apply) {
   const done = useRef(false);
   useEffect(() => {
     if (value !== undefined && !done.current) { done.current = true; apply(value); }
@@ -21,7 +21,7 @@ function useSeed(value, apply) {
 // Trial values are applied to the robot before being saved. If the user leaves the wizard with such
 // unsaved values still applied, put back what the robot had (the firmware menu always writes on exit;
 // here saving is explicit, so leaving means "cancel").
-function useRestoreOnLeave(dirty, restore) {
+export function useRestoreOnLeave(dirty, restore) {
   const { ready, run } = useRobot();
   const ref = useRef({ dirty, restore, ready });
   ref.current = { dirty, restore, ready };
@@ -486,11 +486,3 @@ export function GyroWizard({ onExit }) {
   ];
   return <Wizard icon="gyro" title={t('gyro.title')} intro={t('gyro.short')} steps={steps} onExit={onExit} />;
 }
-
-export const WIZARDS = [
-  { id: 'straight', icon: 'straight', Comp: StraightWizard, titleKey: 'straight.title', descKey: 'straight.short' },
-  { id: 'distance', icon: 'distance', Comp: DistanceWizard, titleKey: 'distance.title', descKey: 'distance.short' },
-  { id: 'gyro', icon: 'gyro', Comp: GyroWizard, titleKey: 'gyro.title', descKey: 'gyro.short' },
-  { id: 'ground', icon: 'ground', Comp: GroundWizard, titleKey: 'ground.title', descKey: 'ground.short' },
-  { id: 'color', icon: 'color', Comp: ColorWizard, titleKey: 'color.title', descKey: 'color.short' },
-];
