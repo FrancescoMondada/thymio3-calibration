@@ -136,6 +136,7 @@ export function NStraight({ onExit }) {
               <Btn kind="choice" big onClick={() => answer(+1, c)}>{t('n.straight.left')}</Btn>
               <Btn kind="choice" big onClick={() => answer(-1, c)}>{t('n.straight.right')}</Btn>
               <Btn kind="ok" big onClick={() => answer(0, c)}>{t('n.straight.ok')}</Btn>
+              <Btn kind="ghost" big onClick={launch}>{t('n.repeat')}</Btn>
             </div>
           )}
           <Working>{t('n.working')}</Working>
@@ -193,6 +194,7 @@ export function NDistance({ onExit }) {
             <Btn kind="choice" big onClick={() => answer(key, +1, c)}>{t(`n.distance.${key}.short`)}</Btn>
             <Btn kind="choice" big onClick={() => answer(key, -1, c)}>{t(`n.distance.${key}.long`)}</Btn>
             <Btn kind="ok" big onClick={() => answer(key, 0, c)}>{t(`n.distance.${key}.ok`)}</Btn>
+            <Btn kind="ghost" big onClick={() => launch(key)}>{t('n.repeat')}</Btn>
           </div>
         )}
         <Working>{t('n.working')}</Working>

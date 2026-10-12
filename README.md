@@ -27,7 +27,7 @@ The switch in the top bar (**Normal | Expert**) chooses the version; the choice 
 
 Both versions send the same operations to the robot, so the stored result is the same kind of value.
 In Normal, straight line and distance converge by **halving the step each time the answer flips**
-(*veered left → veered right* …), the gyroscope runs the offsets measurement and the full turn from a
+(*veered left → veered right* …); after each run the test can simply be **repeated** without answering, the gyroscope runs the offsets measurement and the full turn from a
 single *Start*, and the ground sensors refuse a measurement where white and black are not clearly different.
 The Normal version is a first draft meant to be refined with user testing.
 

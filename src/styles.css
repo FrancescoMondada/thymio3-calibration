@@ -245,7 +245,7 @@ footer { padding-top: 24px; text-align: center; }
 .btn-ok { background: var(--ok); border-color: var(--ok); color: #fff; }
 .btn-ok:hover:not(:disabled) { filter: brightness(1.1); }
 .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-.choices .btn-ok { grid-column: 1 / -1; }
+.choices .btn-ok, .choices .btn-ghost { grid-column: 1 / -1; }
 .ui-switch button { padding: 6px 14px; }
 .n-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .n-top h2 { display: flex; align-items: center; gap: 12px; font-size: 26px; margin-right: auto; }
