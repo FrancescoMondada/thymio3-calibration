@@ -5,14 +5,11 @@ reach by holding ◀ ▶ for 3 s). Each calibration is a short wizard with illus
 sensor readings and a **Save to robot** step that stores the values in the robot's flash,
 exactly where the on-robot menu stores them.
 
-**▶ App: <https://francescomondada.github.io/thymio3-calibration/>** — opens ready to connect to a robot.
-· **Live demo (no robot needed): <https://francescomondada.github.io/thymio3-calibration/?demo>**
+**▶ App: <https://francescomondada.github.io/thymio3-calibration/>**
 
-The app starts **not** in demo mode: click *Connect robot* to pair a Thymio 3 (or *Demo mode*
-to try it without one). The demo runs against a *simulated* robot (slightly imperfect on purpose,
-so there is something to calibrate); nothing is written to any real robot in demo mode, and you can
-switch to a real robot at any time with *Connect robot*. To use a real robot, open the app in **Google Chrome or Microsoft Edge** (Web Bluetooth is not
-available in Firefox or Safari; the app shows a prominent warning there) and click *Connect robot*. The interface is available in French and English.
+Open it in **Google Chrome or Microsoft Edge** (Web Bluetooth is not available in Firefox or Safari; the
+app shows a prominent warning there), switch the robot on and click *Connect robot*. The interface is
+available in French and English.
 
 ## Two versions of the interface
 
@@ -93,9 +90,9 @@ Not included: volume and Wi-Fi credential reset (menu entries that are not calib
 
 ## Status — please read
 
-The procedures come from the firmware sources, and the whole interface is exercised in demo
-mode, but **the app has not yet been validated on a physical robot**. Points to check on
-hardware:
+The procedures come from the firmware sources, and the Bluetooth layer was checked against a mocked
+robot, but **the full set of calibrations has not yet been validated on a physical robot**. Points to
+check on hardware:
 
 - `MOTORS.set_straight_calibration` is documented as ±50 but the firmware code expects raw values
   206–306; the app sends raw values (256 ± correction), reads them back and warns on mismatch.
@@ -143,7 +140,7 @@ Issues and corrections are welcome.
 git clone https://github.com/FrancescoMondada/thymio3-calibration
 cd thymio3-calibration
 npm install
-npm run dev          # http://localhost:5174  (add ?demo for the simulated robot)
+npm run dev          # http://localhost:5174
 npm run build        # static site in dist/
 ```
 
@@ -154,9 +151,9 @@ address does not.
 
 ```
 src/python.js      MicroPython snippets sent to the robot (one per step) + output parser
-src/robot.js       RealRobot (Web Bluetooth via thymio3-ts-api) and DemoBackend
-src/demo.js        Simulated robot used by the demo mode
-src/wizards.jsx    The five wizards          src/Wizard.jsx  Step-by-step shell
+src/robot.js       RealRobot: Web Bluetooth via thymio3-ts-api, streaming and script runner
+src/wizards.jsx    The five Expert wizards   src/Wizard.jsx  Expert step-by-step shell
+src/normal.jsx     The five Normal wizards (short flows, no values)    src/registry.js  Both sets
 src/robot-art.jsx  Robot drawings (top, bottom, side)    src/art.jsx  Illustration per step
 src/i18n.js        French / English strings  src/useRobot.jsx  Connection, telemetry, busy/error state
 ```

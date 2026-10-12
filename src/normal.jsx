@@ -18,12 +18,12 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // Asks to connect the robot when it is not (the step buttons are disabled until then).
 function NeedConnect() {
   const t = useT();
-  const { ready, mode, connect, conn } = useRobot();
+  const { ready, connect, conn } = useRobot();
   if (ready) return null;
   return (
     <Notice tone="warn">
       {t('n.needConnect')}{' '}
-      {mode === 'robot' && <button type="button" className="link-btn" onClick={connect} disabled={conn.status === 'connecting'}>{t('conn.connect')}</button>}
+      <button type="button" className="link-btn" onClick={connect} disabled={conn.status === 'connecting'}>{t('conn.connect')}</button>
     </Notice>
   );
 }
@@ -89,11 +89,10 @@ const readyButton = (t, c) => <Btn kind="primary" big needsRobot={false} onClick
 // =============================================================================
 export function NStraight({ onExit }) {
   const t = useT();
-  const { run, stored, mode } = useRobot();
+  const { run, stored } = useRobot();
   const [corr, setCorr] = useState(0);
   const [phase, setPhase] = useState('ready');           // 'ready' (to launch) | 'ran' (waiting for the answer)
   const [tries, setTries] = useState(0);
-  const [drift, setDrift] = useState(null);              // demo only
   const [dirty, setDirty] = useState(false);
   const flash = useRef(null);                            // what the robot had saved when the wizard opened
   if (!flash.current && stored?.straight) flash.current = [...stored.straight];
@@ -105,7 +104,7 @@ export function NStraight({ onExit }) {
   const launch = async () => {
     setDirty(true);
     const res = await run('straightRun', { corr, dir: 1 });
-    if (res) { setPhase('ran'); setTries((n) => n + 1); setDrift(res.demo?.driftCm ?? null); }
+    if (res) { setPhase('ran'); setTries((n) => n + 1); }
   };
   // dir: +1 = drifted left (more on the left motor), -1 = drifted right, 0 = straight
   const answer = async (dir, c) => {
@@ -140,9 +139,6 @@ export function NStraight({ onExit }) {
             </div>
           )}
           <Working>{t('n.working')}</Working>
-          {mode === 'demo' && drift !== null && phase === 'ran' && (
-            <Notice tone="demo">{Math.abs(drift) < 0.5 ? t('straight.driftNone') : drift > 0 ? t('straight.driftLeft', { cm: drift.toFixed(1) }) : t('straight.driftRight', { cm: Math.abs(drift).toFixed(1) })}</Notice>
-          )}
         </>
       ),
     }),
@@ -155,19 +151,18 @@ export function NStraight({ onExit }) {
 // =============================================================================
 export function NDistance({ onExit }) {
   const t = useT();
-  const { run, stored, mode } = useRobot();
+  const { run, stored } = useRobot();
   const [fw, setFw] = useState(9000000);
   const [bw, setBw] = useState(9000000);
   const [phase, setPhase] = useState('ready');
   const [tries, setTries] = useState({ fw: 0, bw: 0 });
-  const [cm, setCm] = useState(null);                    // demo only
   const size = useRef({ fw: 4 * DIST_STEP, bw: 4 * DIST_STEP });
   const last = useRef({ fw: 0, bw: 0 });
   const touch = useSeed(stored?.distance, (d) => { setFw(d[0]); setBw(d[1]); });
 
   const launch = async (key) => {
     const res = await run('distanceRun', { ticks: key === 'fw' ? fw : bw, dir: key === 'fw' ? 1 : -1 });
-    if (res) { setPhase('ran'); setTries((n) => ({ ...n, [key]: n[key] + 1 })); setCm(res.demo?.cm ?? null); }
+    if (res) { setPhase('ran'); setTries((n) => ({ ...n, [key]: n[key] + 1 })); }
   };
   // sign: +1 = stopped short (lengthen), -1 = went too far (shorten), 0 = right on the line
   const answer = async (key, sign, c) => {
@@ -201,7 +196,6 @@ export function NDistance({ onExit }) {
           </div>
         )}
         <Working>{t('n.working')}</Working>
-        {mode === 'demo' && cm !== null && phase === 'ran' && <Notice tone="demo">{t('distance.travelled', { cm: cm.toFixed(1) })}</Notice>}
       </>
     ),
   });
@@ -219,10 +213,9 @@ export function NDistance({ onExit }) {
 // =============================================================================
 export function NGyro({ onExit }) {
   const t = useT();
-  const { run, mode } = useRobot();
+  const { run } = useRobot();
   const [status, setStatus] = useState('');              // '' | 'still' | 'turning'
   const [offPending, setOffPending] = useState(false);
-  const [errDeg, setErrDeg] = useState(null);            // demo only
   useRestoreOnLeave(offPending, (runOp) => runOp('gyroOffsetsCancel'));
 
   const start = async (c) => {
@@ -234,11 +227,11 @@ export function NGyro({ onExit }) {
     setStatus('turning');
     const r = await run('gyroTurn', { measure: true });
     setStatus('');
-    if (r) { setErrDeg(r.demo ? r.demo.errDeg : null); c.next(); }
+    if (r) c.next();
   };
-  const nudge = async (dir) => { const r = await run('gyroNudge', { dir }); if (r) setErrDeg(r.demo ? r.demo.errDeg : null); };
+  const nudge = (dir) => run('gyroNudge', { dir });
   const aligned = async (c) => { if (await run('gyroScaleSave')) c.finish(); };
-  const shownErr = mode === 'demo' && errDeg !== null ? errDeg : 14;
+  const shownErr = 14;                                   // illustrative error drawn after the turn
 
   const steps = [
     (c) => ({
@@ -265,9 +258,6 @@ export function NGyro({ onExit }) {
             <Btn kind="ok" big onClick={() => aligned(c)}>{t('n.gyro.ok')}</Btn>
           </div>
           <Working>{t('n.working')}</Working>
-          {mode === 'demo' && errDeg !== null && (
-            <Notice tone="demo">{Math.abs(errDeg) < 0.6 ? t('gyro.demoAligned') : t('gyro.demoErr', { deg: Math.abs(errDeg).toFixed(1) })}</Notice>
-          )}
         </>
       ),
     }),

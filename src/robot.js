@@ -1,8 +1,7 @@
-// Robot access layer: one object with the same interface for the real Thymio 3
-// (Web Bluetooth through thymio3-ts-api + MicroPython scripts) and the demo.
+// Robot access layer for the real Thymio 3
+// (Web Bluetooth through thymio3-ts-api + MicroPython scripts).
 import * as thymio from 'thymio-api';
 import { buildScript, parseOutput } from './python.js';
-import { DemoRobot } from './demo.js';
 
 const EV = {
   connected: 'thymio-connected',
@@ -276,17 +275,4 @@ export class RealRobot {
   async emergencyStop() {
     try { await thymio.stopScriptExecution(); } catch { /* ignore */ }
   }
-}
-
-export class DemoBackend {
-  constructor(emit) { this.demo = new DemoRobot((k, v) => { if (k === 'tel') this.lastTel = v; emit(k, v); }); }
-  start() { this.demo.start(); }
-  stop() { this.demo.stop(); }
-  async connect() {}
-  async disconnect() {}
-  op(name, args) { return this.demo.op(name, args); }
-  setSurface(s) { this.demo.setSurface(s); }
-  setLive() {}
-  retryLive() {}
-  async emergencyStop() {}
 }

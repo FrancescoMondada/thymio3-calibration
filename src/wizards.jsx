@@ -49,7 +49,6 @@ export function StraightWizard({ onExit }) {
   const t = useT();
   const { run, stored, ready } = useRobot();
   const [corr, setCorr] = useState(0);
-  const [last, setLast] = useState(null);
   const [saved, setSaved] = useState(false);
   const [warn, setWarn] = useState('');
   const [dirty, setDirty] = useState(false);            // a trial correction is applied but not saved
@@ -63,12 +62,10 @@ export function StraightWizard({ onExit }) {
     setSaved(false);
     setDirty(true);
     const res = await run('straightRun', { corr, dir });
-    setLast(res);
     if (res?.straight && (res.straight[0] !== MOTOR_BASE + corr || res.straight[1] !== MOTOR_BASE - corr)) {
       setWarn(t('straight.mismatch', { got: res.straight.join(' / ') }));
     } else setWarn('');
   };
-  const drift = last?.demo?.driftCm;
 
   const steps = [
     { title: t('straight.s1.title'), text: t('straight.s1.text'), tip: t('straight.s1.tip'), art: <StraightArt label={t('straight.s1.title')} /> },
@@ -108,11 +105,6 @@ export function StraightWizard({ onExit }) {
           </div>
           <p className="muted small">{t('straight.limit')}</p>
           {warn && <Notice tone="warn">{warn}</Notice>}
-          {drift !== undefined && (
-            <Notice tone="demo"><b>{t('common.demoResult')} :</b>{' '}
-              {Math.abs(drift) < 0.5 ? t('straight.driftNone') : drift > 0 ? t('straight.driftLeft', { cm: drift.toFixed(1) }) : t('straight.driftRight', { cm: Math.abs(drift).toFixed(1) })}
-            </Notice>
-          )}
         </>
       ),
     },
@@ -145,7 +137,6 @@ export function DistanceWizard({ onExit }) {
   const { run, stored, ready } = useRobot();
   const [fw, setFw] = useState(FACTORY.distance[0]);
   const [bw, setBw] = useState(FACTORY.distance[1]);
-  const [cm, setCm] = useState({});
   const [saved, setSaved] = useState(false);
   const touch = useSeed(stored?.distance, (d) => { setFw(d[0]); setBw(d[1]); });
 
@@ -166,15 +157,12 @@ export function DistanceWizard({ onExit }) {
           <Stat label={t('distance.steps')}>{delta(ticks)}</Stat>
         </div>
         <div className="row">
-          <Btn kind="primary" onClick={async () => { const r = await run('distanceRun', { ticks, dir }); if (r?.demo) setCm((c) => ({ ...c, [key]: r.demo.cm })); }}>
+          <Btn kind="primary" onClick={() => run('distanceRun', { ticks, dir })}>
             {dir > 0 ? t('distance.forward') : t('distance.backward')}
           </Btn>
           <Btn needsRobot={false} onClick={() => change(DIST_STEP)}>{t('distance.longer')}</Btn>
           <Btn needsRobot={false} onClick={() => change(-DIST_STEP)}>{t('distance.shorter')}</Btn>
         </div>
-        {cm[key] !== undefined && (
-          <Notice tone="demo"><b>{t('common.demoResult')} :</b> {t('distance.travelled', { cm: cm[key].toFixed(1) })}</Notice>
-        )}
       </>
     );
   };
@@ -363,12 +351,11 @@ export function GroundWizard({ onExit }) {
 // =============================================================================
 export function GyroWizard({ onExit }) {
   const t = useT();
-  const { run, stored, tel, mode } = useRobot();
+  const { run, stored, tel } = useRobot();
   const [offPending, setOffPending] = useState(false);
   const [offSaved, setOffSaved] = useState(false);
   const [turned, setTurned] = useState(false);
   const [angle, setAngle] = useState(null);       // [raw, deg] counted since the end of the turn
-  const [errDeg, setErrDeg] = useState(null);     // demo only
   const [scaleSaved, setScaleSaved] = useState(false);
   // while offsets are measured but not saved, the robot's automatic gyro calibration is switched off
   useRestoreOnLeave(offPending, (runOp) => runOp('gyroOffsetsCancel'));
@@ -377,23 +364,19 @@ export function GyroWizard({ onExit }) {
   const turn = async (measure) => {
     setScaleSaved(false);
     const r = await run('gyroTurn', { measure });
-    if (r) { setTurned(true); setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); }
+    if (r) { setTurned(true); setAngle(r.angle || null); }
   };
   const nudge = async (dir) => {
     const r = await run('gyroNudge', { dir });
-    if (r) { setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); }
+    if (r) setAngle(r.angle || null);
   };
   // After a manual rotation (by hand) or a nudge, read the precise angle accumulated by the gyroscope.
   const readAngle = async () => {
     const r = await run('gyroAngle');
-    if (r) { setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); }
+    if (r) setAngle(r.angle || null);
   };
-  // Demo only: stands for turning the robot by hand.
-  const hand = async (dir) => {
-    const r = await run('gyroHand', { dir });
-    if (r) { setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); }
-  };
-  const shownErr = mode === 'demo' && errDeg !== null ? errDeg : 14;
+  // Illustrative angle error drawn after the turn (the real one is not known).
+  const shownErr = 14;
 
   const steps = [
     {
@@ -441,23 +424,12 @@ export function GyroWizard({ onExit }) {
           <div className="row">
             <Btn disabled={!turned} onClick={() => nudge(-1)}>{t('gyro.nudgeLeft')}</Btn>
             <Btn disabled={!turned} onClick={() => nudge(1)}>{t('gyro.nudgeRight')}</Btn>
-            {mode === 'demo' && (
-              <>
-                <Btn kind="ghost" disabled={!turned} onClick={() => hand(-1)}>{t('gyro.handDemo')} ↺</Btn>
-                <Btn kind="ghost" disabled={!turned} onClick={() => hand(1)}>{t('gyro.handDemo')} ↻</Btn>
-              </>
-            )}
           </div>
           <div className="stats">
             <Stat label={t('gyro.liveAngle')}>{turned && Number.isFinite(tel.angleDeg) ? `${tel.angleDeg}°` : '–'}</Stat>
             <Stat label={t('gyro.measuredCorrection')}>{angle ? `${angle[0]} (${angle[1]}°)` : '–'}</Stat>
           </div>
           <div className="row"><Btn kind="ghost" disabled={!turned} onClick={readAngle}>{t('gyro.readAngle')}</Btn></div>
-          {mode === 'demo' && errDeg !== null && (
-            <Notice tone="demo"><b>{t('common.demoResult')} :</b>{' '}
-              {Math.abs(errDeg) < 0.6 ? t('gyro.demoAligned') : t('gyro.demoErr', { deg: Math.abs(errDeg).toFixed(1) })}
-            </Notice>
-          )}
         </>
       ),
     },
@@ -473,7 +445,7 @@ export function GyroWizard({ onExit }) {
           {!turned && <Notice tone="warn">{t('gyro.turnFirst')}</Notice>}
           <SaveRow>
             <Btn kind="primary" disabled={!turned} onClick={async () => { if (await run('gyroScaleSave')) { setScaleSaved(true); setTurned(false); } }}>{t('gyro.saveScale')}</Btn>
-            <Btn onClick={async () => { const r = await run('gyroTurn', { measure: false }); if (r) { setAngle(r.angle || null); setErrDeg(r.demo ? r.demo.errDeg : null); } }}>{t('gyro.verify')}</Btn>
+            <Btn onClick={async () => { const r = await run('gyroTurn', { measure: false }); if (r) setAngle(r.angle || null); }}>{t('gyro.verify')}</Btn>
             <FactoryButton op="gyroScaleReset" onDone={() => setScaleSaved(true)} />
           </SaveRow>
           {scaleSaved && <Notice tone="ok">{t('common.saved')}</Notice>}

@@ -12,7 +12,7 @@ const rich = (text) => text.split('**').map((part, k) => (k % 2 ? <strong key={k
 // stream the step needs: 'main' | 'others' | undefined.
 export function Wizard({ icon, title, intro, steps, onExit }) {
   const t = useT();
-  const { mode, setLive } = useRobot();
+  const { setLive } = useRobot();
   const [index, setIndex] = useState(0);
   const step = steps[index];
   // Live sensor readings only while a step needs them (one stream at a time, see RealRobot).
@@ -50,7 +50,6 @@ export function Wizard({ icon, title, intro, steps, onExit }) {
           <h3>{step.title}</h3>
           <p>{rich(step.text)}</p>
           {step.tip && <Notice tone="tip">{step.tip}</Notice>}
-          {mode === 'demo' && step.demoNote}
           <div className="controls">{step.body}</div>
         </div>
       </div>

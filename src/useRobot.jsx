@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { RealRobot, DemoBackend } from './robot.js';
+import { RealRobot } from './robot.js';
 
 const RobotCtx = createContext(null);
 export const useRobot = () => useContext(RobotCtx);
@@ -7,17 +7,13 @@ export const useRobot = () => useContext(RobotCtx);
 const STORED_KEYS = ['straight', 'distance', 'color', 'gyroOffsets', 'gyroScale', 'ground', 'battery'];
 
 export function RobotProvider({ children }) {
-  // "?demo" in the URL starts the simulated robot straight away (used by the live demo link).
-  const [mode, setMode] = useState(() => (new URLSearchParams(window.location.search).has('demo') ? 'demo' : 'robot')); // 'robot' | 'demo'
   const [conn, setConn] = useState({ status: 'disconnected' });
   const [tel, setTel] = useState({ fresh: false, ground: {}, reflected: {}, ambient: {}, colorRaw: {}, hsv: {}, gyro: {}, buttons: {} });
   const [stored, setStored] = useState(null);          // what the robot reported last
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [surface, setSurfaceState] = useState('white');
-  const [log, setLog] = useState([]);                 // communication log (real robot only)
+  const [log, setLog] = useState([]);                 // communication log
   const backend = useRef(null);
-  const pendingConnect = useRef(false);            // connect as soon as the real backend is up (from the demo)
   const telTimer = useRef(0);
   const pendingTel = useRef(null);
 
@@ -37,23 +33,16 @@ export function RobotProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const b = mode === 'demo' ? new DemoBackend(emit) : new RealRobot(emit);
+    const b = new RealRobot(emit);
     backend.current = b;
     b.start();
-    if (mode === 'demo') b.setSurface(surface);
-    // Deferred so a React StrictMode re-run of this effect doesn't connect twice.
-    const autoConnect = mode === 'robot' && pendingConnect.current
-      ? window.setTimeout(() => { pendingConnect.current = false; b.connect().catch(() => { /* reported through conn */ }); }, 0)
-      : 0;
     return () => {
-      window.clearTimeout(autoConnect);
       b.stop();
       window.clearTimeout(telTimer.current);
       telTimer.current = 0;
       backend.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, emit]);
+  }, [emit]);
 
   const merge = useCallback((res) => {
     setStored((prev) => {
@@ -90,18 +79,6 @@ export function RobotProvider({ children }) {
     setStored(null);
   }, []);
 
-  const enterDemo = useCallback(() => { setStored(null); setError(''); setConn({ status: 'disconnected' }); setMode('demo'); }, []);
-  const leaveDemo = useCallback(() => {
-    setStored(null); setError(''); setConn({ status: 'disconnected' }); setMode('robot');
-    try { // "?demo" must not bring the demo back on reload
-      const url = new URL(window.location.href);
-      url.searchParams.delete('demo');
-      window.history.replaceState(null, '', url);
-    } catch { /* ignore */ }
-  }, []);
-  // From the demo: switch to the real robot and open the Bluetooth chooser right away.
-  const connectFromDemo = useCallback(() => { pendingConnect.current = true; leaveDemo(); }, [leaveDemo]);
-  const setSurface = useCallback((s) => { setSurfaceState(s); backend.current?.setSurface?.(s); }, []);
   const emergencyStop = useCallback(() => backend.current?.emergencyStop?.(), []);
   const setLive = useCallback((kind) => backend.current?.setLive?.(kind), []);
   const retryLive = useCallback(() => backend.current?.retryLive?.(), []);
@@ -113,11 +90,11 @@ export function RobotProvider({ children }) {
   }, [ready, run]);
 
   const value = useMemo(() => ({
-    mode, conn, tel, stored, busy, error, surface, ready, log, clearLog: () => setLog([]),
-    run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop, setLive, retryLive,
+    conn, tel, stored, busy, error, ready, log, clearLog: () => setLog([]),
+    run, connect, disconnect, emergencyStop, setLive, retryLive,
     clearError: () => setError(''),
     refresh: () => run('readAll'),
-  }), [mode, conn, tel, stored, busy, error, surface, ready, log, run, connect, disconnect, enterDemo, leaveDemo, connectFromDemo, setSurface, emergencyStop, setLive, retryLive]);
+  }), [conn, tel, stored, busy, error, ready, log, run, connect, disconnect, emergencyStop, setLive, retryLive]);
 
   return <RobotCtx.Provider value={value}>{children}</RobotCtx.Provider>;
 }

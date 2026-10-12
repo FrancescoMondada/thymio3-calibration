@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { I18nContext, LANGS, initialLang, makeT, useT } from './i18n.js';
 import { RobotProvider, useRobot } from './useRobot.jsx';
 import { supportsBluetooth } from './robot.js';
-import { SURFACES } from './demo.js';
 import { WIZARDS } from './registry.js';
 import { UiModeProvider, useUiMode } from './ui-mode.jsx';
 import { Icon } from './art.jsx';
@@ -11,41 +10,43 @@ import { FACTORY } from './python.js';
 
 const same = (a, b) => Array.isArray(a) && a.length === b.length && a.every((v, k) => v === b[k]);
 
-function Header() {
+// The top bar is the same in both versions: only the details of the Expert version live elsewhere.
+// Interactive controls keep fixed places (right cluster, fixed-width buttons); the variable info chips
+// sit to their left and grow leftwards, so nothing moves when a value or a label changes.
+function HeaderInfo() {
   const t = useT();
   const r = useRobot();
-  const { conn, mode, busy } = r;
-  const expert = useUiMode().uiMode === 'expert';
-  const status = conn.status;
-  const label = { connected: t('conn.connected'), connecting: t('conn.connecting'), reconnect: t('conn.reconnect'), disconnected: t('conn.disconnected') }[status] || t('conn.disconnected');
+  const { conn } = r;
+  if (conn.status !== 'connected') return <div className="top-info" />;
+  // live value when the "others" stream runs, otherwise the one read with the settings
+  const v = r.tel.battery > 0 ? r.tel.battery : (r.stored?.battery > 0 ? r.stored.battery / 1000 : 0);
   return (
-    <div className="status">
-      <span className={`pill pill-${status}`}><i />{mode === 'demo' ? `${t('mode.demo')} · ` : ''}{label}</span>
-      {expert && status === 'connected' && conn.device && <span className="chip">{conn.device}</span>}
-      {expert && status === 'connected' && mode === 'robot' && (
-        <span className="chip" title={conn.firmware ? `ESP32 ${conn.firmware.esp32_ver} · STM32 ${conn.firmware.stm32_ver}` : undefined}>
+    <div className="top-info">
+      {conn.device && <span className="chip chip-device" title={conn.device}>{conn.device}</span>}
+      {(
+        <span className="chip chip-fw" title={conn.firmware ? `ESP32 ${conn.firmware.esp32_ver} · STM32 ${conn.firmware.stm32_ver}` : undefined}>
           {t('conn.firmware')} {conn.firmware?.esp32_ver || '…'}
         </span>
       )}
       {/* Fixed width + tabular digits: the readout changes all the time and must not move the bar. */}
-      {expert && status === 'connected' && (() => {
-        // live value when the "others" stream runs, otherwise the one read with the settings
-        const v = r.tel.battery > 0 ? r.tel.battery : (r.stored?.battery > 0 ? r.stored.battery / 1000 : 0);
-        return <span className="chip chip-battery">{t('conn.battery')} {v > 0 ? v.toFixed(2) : '–.––'} V</span>;
-      })()}
-      {busy && <button type="button" className="btn btn-danger" onClick={r.emergencyStop}>{t('stop')}</button>}
-      {mode === 'robot' && status !== 'connected' && (
-        <button type="button" className="btn btn-primary" onClick={r.connect} disabled={status === 'connecting' || !supportsBluetooth()}>{t('conn.connect')}</button>
-      )}
-      {mode === 'robot' && status === 'connected' && <button type="button" className="btn btn-ghost" onClick={r.disconnect}>{t('conn.disconnect')}</button>}
-      {expert && mode === 'robot' && status !== 'connected' && <button type="button" className="btn btn-ghost" onClick={r.enterDemo}>{t('mode.demo')}</button>}
-      {mode === 'demo' && (
-        <>
-          <button type="button" className="btn btn-primary" onClick={r.connectFromDemo} disabled={!supportsBluetooth()}>{t('conn.connect')}</button>
-          <button type="button" className="btn btn-ghost" onClick={r.leaveDemo}>{t('mode.leaveDemo')}</button>
-        </>
-      )}
+      <span className="chip chip-battery">{t('conn.battery')} {v > 0 ? v.toFixed(2) : '–.––'} V</span>
     </div>
+  );
+}
+
+function Header() {
+  const t = useT();
+  const r = useRobot();
+  const { conn } = r;
+  const status = conn.status;
+  const label = { connected: t('conn.connected'), connecting: t('conn.connecting'), reconnect: t('conn.reconnect'), disconnected: t('conn.disconnected') }[status] || t('conn.disconnected');
+  return (
+    <>
+      <span className={`pill pill-${status}`}><i />{label}</span>
+      {status === 'connected'
+        ? <button type="button" className="btn btn-ghost slot-conn" onClick={r.disconnect}>{t('conn.disconnect')}</button>
+        : <button type="button" className="btn btn-primary slot-conn" onClick={r.connect} disabled={status === 'connecting' || !supportsBluetooth()}>{t('conn.connect')}</button>}
+    </>
   );
 }
 
@@ -62,26 +63,8 @@ function ModeSwitch() {
   );
 }
 
-function DemoBar() {
-  const t = useT();
-  const { mode, surface, setSurface } = useRobot();
-  if (mode !== 'demo') return null;
-  return (
-    <div className="demobar">
-      <span>{t('mode.demoBanner')}</span>
-      <label>{t('mode.surface')}
-        <select value={surface} onChange={(e) => setSurface(e.target.value)}>
-          {Object.keys(SURFACES).map((k) => <option key={k} value={k}>{t(`surface.${k}`)}</option>)}
-        </select>
-      </label>
-    </div>
-  );
-}
-
-// Web Bluetooth only exists in Chromium browsers (Chrome, Edge). Say it loudly, on every page.
 function BrowserWarning() {
   const t = useT();
-  const { mode, enterDemo } = useRobot();
   if (supportsBluetooth()) return null;
   return (
     <div className="browser-warning" role="alert">
@@ -92,7 +75,6 @@ function BrowserWarning() {
         <div className="bw-links">
           <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">{t('conn.browserGet')}</a>
           <a href="https://www.microsoft.com/edge" target="_blank" rel="noreferrer">{t('conn.browserGetEdge')}</a>
-          {mode !== 'demo' && <button type="button" className="link-btn" onClick={enterDemo}>{t('conn.browserDemo')}</button>}
         </div>
       </div>
     </div>
@@ -146,11 +128,11 @@ function Stored() {
 // Home of the normal version: connect, then pick what to adjust. No values, no jargon.
 function NormalHome({ onOpen }) {
   const t = useT();
-  const { ready, conn, connect, mode, enterDemo } = useRobot();
+  const { ready, conn, connect } = useRobot();
   return (
     <>
       <h2 className="n-home-title">{t('n.homeTitle')}</h2>
-      {!ready && mode === 'robot' && (
+      {!ready && (
         <section className="card n-connect">
           <div>
             <h3>{t('n.connectTitle')}</h3>
@@ -169,7 +151,6 @@ function NormalHome({ onOpen }) {
           </button>
         ))}
       </div>
-      {!ready && mode === 'robot' && <p className="n-try"><button type="button" className="link-btn" onClick={enterDemo}>{t('n.try')}</button></p>}
     </>
   );
 }
@@ -202,9 +183,8 @@ function Home({ onOpen }) {
 // Step-by-step trace of the Bluetooth exchange: to paste in a bug report when something fails.
 function CommLog() {
   const t = useT();
-  const { log, clearLog, mode, run, ready, busy } = useRobot();
+  const { log, clearLog, run, ready, busy } = useRobot();
   const [copied, setCopied] = useState(false);
-  if (mode === 'demo') return null;
   const text = log.join('\n');
   const copy = async () => {
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ }
@@ -224,7 +204,7 @@ function CommLog() {
 
 function Shell() {
   const t = useT();
-  const { error, clearError, busy, conn, log, retryLive } = useRobot();
+  const { error, clearError, busy, conn, log, retryLive, emergencyStop } = useRobot();
   const { uiMode } = useUiMode();
   const expert = uiMode === 'expert';
   const [view, setView] = useState('home');
@@ -234,9 +214,13 @@ function Shell() {
   return (
     <div className="shell">
       <BrowserWarning />
-      <DemoBar />
       <main>
-        {busy && <div className="busy" role="status"><span className="spinner" />{conn.initializing ? t('busy.init') : t('busy')}</div>}
+        {busy && (
+          <div className="busy" role="status">
+            <span className="spinner" />{conn.initializing ? t('busy.init') : t('busy')}
+            <button type="button" className="btn btn-danger btn-stop" onClick={emergencyStop}>{t('stop')}</button>
+          </div>
+        )}
         {expert && conn.liveBlocked && (
           <Notice tone="warn">
             {t('live.blocked')}{' '}
@@ -273,19 +257,28 @@ export default function App() {
       <UiModeProvider>
       <RobotProvider>
         <header className="top">
-          <div className="brand">
-            <div className="logo" aria-hidden="true" />
-            <div>
-              <h1>{t('app.title')}</h1>
-              <p className="muted small">{t('app.subtitle')}</p>
+          {/* row 1: identity and preferences */}
+          <div className="top-row">
+            <div className="brand">
+              <div className="logo" aria-hidden="true" />
+              <div>
+                <h1>{t('app.title')}</h1>
+                <p className="muted small">{t('app.subtitle')}</p>
+              </div>
+            </div>
+            <div className="top-prefs">
+              <ModeSwitch />
+              <div className="langs" role="group" aria-label="Language">
+                {LANGS.map((l) => (
+                  <button key={l.id} type="button" className={l.id === lang ? 'on' : ''} onClick={() => setLang(l.id)}>{l.label}</button>
+                ))}
+              </div>
             </div>
           </div>
-          <Header />
-          <ModeSwitch />
-          <div className="langs" role="group" aria-label="Language">
-            {LANGS.map((l) => (
-              <button key={l.id} type="button" className={l.id === lang ? 'on' : ''} onClick={() => setLang(l.id)}>{l.label}</button>
-            ))}
+          {/* row 2: the robot — connection on the left, what is connected on the right */}
+          <div className="top-row top-robot">
+            <div className="top-actions"><Header /></div>
+            <HeaderInfo />
           </div>
         </header>
         <Shell />
