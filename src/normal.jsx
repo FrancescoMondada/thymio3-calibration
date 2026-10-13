@@ -13,6 +13,10 @@ import { MOTOR_BASE, MOTOR_CORR_MAX, DIST_STEP } from './python.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+// Distance corrections in the normal version (hardware timer ticks; DIST_STEP = 1 % of the 15 cm duration).
+const BIG_STEP = 4 * DIST_STEP;    // "by far": about 6 mm over 15 cm
+const SMALL_STEP = DIST_STEP;      // "a little": about 1.5 mm
+
 // ---- shared pieces -------------------------------------------------------------------------------
 
 // Asks to connect the robot when it is not (the step buttons are disabled until then).
@@ -157,26 +161,23 @@ export function NDistance({ onExit }) {
   const [bw, setBw] = useState(9000000);
   const [phase, setPhase] = useState('ready');
   const [tries, setTries] = useState({ fw: 0, bw: 0 });
-  const size = useRef({ fw: 4 * DIST_STEP, bw: 4 * DIST_STEP });
-  const last = useRef({ fw: 0, bw: 0 });
   const touch = useSeed(stored?.distance, (d) => { setFw(d[0]); setBw(d[1]); });
 
   const launch = async (key) => {
     const res = await run('distanceRun', { ticks: key === 'fw' ? fw : bw, dir: key === 'fw' ? 1 : -1 });
     if (res) { setPhase('ran'); setTries((n) => ({ ...n, [key]: n[key] + 1 })); }
   };
-  // sign: +1 = stopped short (lengthen), -1 = went too far (shorten), 0 = right on the line
-  const answer = async (key, sign, c) => {
+  // sign: +1 = stopped short (lengthen), -1 = went too far (shorten), 0 = right on the line;
+  // step: how much to correct (BIG_STEP "by far", SMALL_STEP "a little")
+  const answer = async (key, sign, step, c) => {
     if (sign === 0) {
       if (key === 'fw') { setPhase('ready'); c.next(); return; }
       const r = await run('distanceSave', { fw, bw });
       if (r) c.finish();
       return;
     }
-    if (last.current[key] && last.current[key] !== sign) size.current[key] = Math.max(DIST_STEP, Math.round(size.current[key] / 2));
-    last.current[key] = sign;
     touch();
-    (key === 'fw' ? setFw : setBw)((v) => Math.max(DIST_STEP, v + sign * size.current[key]));
+    (key === 'fw' ? setFw : setBw)((v) => Math.max(DIST_STEP, v + sign * step));
     setPhase('ready');
   };
 
@@ -191,9 +192,12 @@ export function NDistance({ onExit }) {
           <Btn kind="primary" big onClick={() => launch(key)}>{tries[key] ? t('n.distance.again') : t('n.distance.launch')}</Btn>
         ) : (
           <div className="choices">
-            <Btn kind="choice" big onClick={() => answer(key, +1, c)}>{t(`n.distance.${key}.short`)}</Btn>
-            <Btn kind="choice" big onClick={() => answer(key, -1, c)}>{t(`n.distance.${key}.long`)}</Btn>
-            <Btn kind="ok" big onClick={() => answer(key, 0, c)}>{t(`n.distance.${key}.ok`)}</Btn>
+            {/* a scale: far short · short · right on the line · past · far past */}
+            <Btn kind="choice" big onClick={() => answer(key, +1, BIG_STEP, c)}>{t(`n.distance.${key}.shortFar`)}</Btn>
+            <Btn kind="choice" big onClick={() => answer(key, +1, SMALL_STEP, c)}>{t(`n.distance.${key}.short`)}</Btn>
+            <Btn kind="ok" big onClick={() => answer(key, 0, 0, c)}>{t(`n.distance.${key}.ok`)}</Btn>
+            <Btn kind="choice" big onClick={() => answer(key, -1, SMALL_STEP, c)}>{t(`n.distance.${key}.long`)}</Btn>
+            <Btn kind="choice" big onClick={() => answer(key, -1, BIG_STEP, c)}>{t(`n.distance.${key}.longFar`)}</Btn>
             <Btn kind="ghost" big onClick={() => launch(key)}>{t('n.repeat')}</Btn>
           </div>
         )}
