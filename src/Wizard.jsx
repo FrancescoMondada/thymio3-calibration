@@ -5,7 +5,7 @@ import { Notice } from './ui.jsx';
 import { useRobot } from './useRobot.jsx';
 
 // **bold** segments in the strings become <strong>.
-const rich = (text) => text.split('**').map((part, k) => (k % 2 ? <strong key={k}>{part}</strong> : part));
+export const rich = (text) => text.split('**').map((part, k) => (k % 2 ? <strong key={k}>{part}</strong> : part));
 
 // Generic step-by-step shell: illustration + instructions + the controls of
 // the step. `steps[i]` = { title, text, tip, art, body, live } where `live` is the sensor

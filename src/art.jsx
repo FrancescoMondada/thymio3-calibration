@@ -154,7 +154,7 @@ export function GyroStillArt({ label }) {
 // sticking out on both sides: the longer it is, the easier it is to see a small angle error.
 // `error` (degrees) is how far the robot is rotated after the turn; the red dashed line is its back
 // side prolonged on both sides.
-export function GyroTurnArt({ label, stage = 'start', error = 0 }) {
+export function GyroTurnArt({ label, stage = 'start', error = 0, hand = false }) {
   const k = 1.25;
   const px = 320, py = 176;                        // pivot: middle of the wheel axle
   const lineY = (HALF_LEN - AXLE_Y) * k + 5;       // just behind the back edge, relative to the pivot
@@ -173,6 +173,16 @@ export function GyroTurnArt({ label, stage = 'start', error = 0 }) {
         <RobotTop x={0} y={-AXLE_Y * k} s={k} />
         {showError && <line x1={-half} y1={lineY} x2={half} y2={lineY} stroke="var(--danger)" strokeWidth="3.5" strokeDasharray="7 5" strokeLinecap="round" />}
       </g>
+      {/* "you can also turn it by hand": a hand and rotation arrows on both sides of the robot */}
+      {hand && (
+        <g>
+          <g transform="translate(404 64) scale(1.55)"><HandShape /></g>
+          <g fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round">
+            <path d="M196,150 A140,140 0 0 0 176,206" markerEnd="url(#ar-accent)" />
+            <path d="M444,150 A140,140 0 0 1 464,206" markerEnd="url(#ar-accent)" />
+          </g>
+        </g>
+      )}
       {stage === 'nudge' && (
         <g fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round">
           <path d="M196,150 A140,140 0 0 0 176,206" markerEnd="url(#ar-accent)" />
@@ -181,6 +191,25 @@ export function GyroTurnArt({ label, stage = 'start', error = 0 }) {
       )}
     </Frame>
   );
+}
+
+// Open-hand pictogram, 48 × 56, fingers up.
+export function HandShape() {
+  const f = { fill: 'var(--accent-soft)', stroke: 'var(--accent)', strokeWidth: 2.4, strokeLinejoin: 'round' };
+  return (
+    <g {...f}>
+      <rect x="9" y="10" width="7" height="26" rx="3.5" />
+      <rect x="17" y="4" width="7" height="32" rx="3.5" />
+      <rect x="25" y="8" width="7" height="28" rx="3.5" />
+      <rect x="33" y="16" width="7" height="20" rx="3.5" />
+      <rect x="-1" y="31" width="20" height="8" rx="4" transform="rotate(-35 7 35)" />
+      <rect x="7" y="28" width="36" height="24" rx="10" />
+    </g>
+  );
+}
+
+export function HandIcon({ size = 46 }) {
+  return <svg viewBox="-4 0 56 56" width={size} height={size * 56 / 56} aria-hidden="true"><HandShape /></svg>;
 }
 
 // ---- small icons for the home cards ------------------------------------------

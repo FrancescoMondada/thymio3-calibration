@@ -416,7 +416,7 @@ export function GyroWizard({ onExit }) {
     },
     { title: t('gyro.s3.title'), text: t('gyro.s3.text'), tip: t('gyro.s3.tip'), art: <GyroTurnArt label={t('gyro.s3.title')} stage="start" /> },
     {
-      live: 'others', title: t('gyro.s4.title'), text: t('gyro.s4.text'), tip: t('gyro.s4.tip'), art: <GyroTurnArt label={t('gyro.s4.title')} stage={turned ? 'after' : 'start'} error={shownErr} />,
+      live: 'others', title: t('gyro.s4.title'), text: t('gyro.s4.text'), tip: t('gyro.s4.tip'), art: <GyroTurnArt label={t('gyro.s4.title')} stage={turned ? 'after' : 'start'} error={shownErr} hand={turned} />,
       body: (
         <>
           <NeedRobot />

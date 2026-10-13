@@ -7,7 +7,8 @@ import React, { useRef, useState } from 'react';
 import { useT } from './i18n.js';
 import { useRobot } from './useRobot.jsx';
 import { Btn, Notice } from './ui.jsx';
-import { Icon, StraightArt, DistanceArt, ColorArt, GroundArt, GyroTurnArt } from './art.jsx';
+import { Icon, HandIcon, StraightArt, DistanceArt, ColorArt, GroundArt, GyroTurnArt } from './art.jsx';
+import { rich } from './Wizard.jsx';
 import { useSeed, useRestoreOnLeave } from './wizards.jsx';
 import { MOTOR_BASE, MOTOR_CORR_MAX, DIST_STEP } from './python.js';
 
@@ -77,7 +78,7 @@ function NormalShell({ icon, title, steps, onExit }) {
         <div className="wizard-art">{step.art}</div>
         <div className="wizard-panel n-panel">
           <h3>{step.title}</h3>
-          <p>{step.text}</p>
+          <p>{rich(step.text)}</p>
           <div className="controls">{step.body}</div>
           {index > 0 && <button type="button" className="link-btn n-back" onClick={ctx.back}>{t('n.back')}</button>}
         </div>
@@ -253,11 +254,15 @@ export function NGyro({ onExit }) {
       ),
     }),
     (c) => ({
-      art: <GyroTurnArt label={t('n.gyro.s2.title')} stage="after" error={shownErr} />,
+      art: <GyroTurnArt label={t('n.gyro.s2.title')} stage="after" error={shownErr} hand />,
       title: t('n.gyro.s2.title'),
       text: t('n.gyro.s2.text'),
       body: (
         <>
+          <div className="hand-callout">
+            <HandIcon />
+            <span>{rich(t('n.gyro.hand'))}</span>
+          </div>
           <div className="choices">
             <Btn kind="choice" big onClick={() => nudge(-1)}>{t('gyro.nudgeLeft')}</Btn>
             <Btn kind="choice" big onClick={() => nudge(1)}>{t('gyro.nudgeRight')}</Btn>
