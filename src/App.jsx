@@ -120,9 +120,10 @@ function Stored() {
     return fmt(v);
   };
   return (
-    <section className="card stored">
-      <div className="card-head">
-        <h3>{t('home.stored')}</h3>
+    <details className="commlog stored">
+      <summary>{t('home.stored')}</summary>
+      <div className="stored-head">
+        <p className="muted small">{t('home.storedHint')}</p>
         <button type="button" className="btn btn-ghost" onClick={refresh} disabled={!ready || busy}>{t('home.refresh')}</button>
       </div>
       {stored?.readErrors && (
@@ -142,7 +143,7 @@ function Stored() {
           );
         })}
       </dl>
-    </section>
+    </details>
   );
 }
 
@@ -196,7 +197,6 @@ function Home({ onOpen }) {
         ))}
       </div>
       <p className="muted small">{t('home.order')}</p>
-      <Stored />
     </>
   );
 }
@@ -258,6 +258,7 @@ function Shell() {
         )}
         {Wiz ? <Wiz key={`${wiz.id}-${uiMode}`} onExit={() => setView('home')} /> : (expert ? <Home onOpen={setView} /> : <NormalHome onOpen={setView} />)}
       </main>
+      {expert && <Stored />}
       {expert && <CommLog />}
       <footer className="muted small">{t('footer.credit')}</footer>
     </div>

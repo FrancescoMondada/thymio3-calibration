@@ -289,3 +289,7 @@ footer { padding-top: 24px; text-align: center; }
 
 .kv-lines { display: inline-flex; flex-direction: column; gap: 2px; vertical-align: top; }
 .kv-lines b { font-weight: 700; }
+
+.stored-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 10px 0 4px; }
+.stored-head p { margin: 0; }
+.commlog.stored dl { margin: 0; }
