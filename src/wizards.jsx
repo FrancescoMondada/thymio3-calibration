@@ -371,9 +371,9 @@ export function GyroWizard({ onExit }) {
   useRestoreOnLeave(offPending, (runOp) => runOp('gyroOffsetsCancel'));
 
   const gx = tel.gyro || {};
-  const turn = async (measure) => {
+  const turn = async () => {
     setScaleSaved(false);
-    const r = await run('gyroTurn', { measure });
+    const r = await run('gyroTurn');
     if (r) { setTurned(true); setAngle(r.angle || null); }
   };
   const nudge = async (dir) => {
@@ -430,7 +430,7 @@ export function GyroWizard({ onExit }) {
       body: (
         <>
           <NeedRobot />
-          <div className="row"><Btn kind="primary" onClick={() => turn(true)}>{t('gyro.turn')}</Btn></div>
+          <div className="row"><Btn kind="primary" onClick={() => turn()}>{t('gyro.turn')}</Btn></div>
           <div className="row">
             <Btn disabled={!turned} onClick={() => nudge(-1)}>{t('gyro.nudgeLeft')}</Btn>
             <Btn disabled={!turned} onClick={() => nudge(1)}>{t('gyro.nudgeRight')}</Btn>
@@ -445,25 +445,38 @@ export function GyroWizard({ onExit }) {
     },
     {
       title: t('gyro.s5.title'), text: t('gyro.s5.text'), art: <GyroTurnArt label={t('gyro.s5.title')} stage="start" />,
-      body: (
-        <>
-          <NeedRobot />
-          <div className="stats">
-            <Stat label={t('gyro.scale')}>{stored?.gyroScale === undefined ? '–' : stored.gyroScale === 0 ? `0 (${t('gyro.scaleNominal')})` : stored.gyroScale}</Stat>
-            <Stat label={t('gyro.measuredCorrection')}>{angle ? angle[0] : '–'}</Stat>
-          </div>
-          {!turned && <Notice tone="warn">{t('gyro.turnFirst')}</Notice>}
-          <SaveRow>
-            <Btn kind="primary" disabled={!turned} onClick={async () => { if (await run('gyroScaleSave')) { setScaleSaved(true); setTurned(false); } }}>{t('gyro.saveScale')}</Btn>
-            <Btn onClick={async () => { const r = await run('gyroTurn', { measure: false }); if (r) setAngle(r.angle || null); }}>{t('gyro.verify')}</Btn>
-            <FactoryButton op="gyroScaleReset" onDone={() => setScaleSaved(true)} />
-          </SaveRow>
-          {scaleSaved && <Notice tone="ok">{t('common.saved')}</Notice>}
-          {angle && !turned && (
-            <p className="muted small">{t('gyro.residual')} : {angle[0]} ({angle[1]}°)</p>
-          )}
-        </>
-      ),
+      body: ({ goTo }) => {
+        // What "Save" will do, computed with the same rule as the robot script (gyroScaleSave):
+        // new scale = current scale + (-angle / 4). The save always uses the robot's own angle at that moment.
+        const cur = stored?.gyroScale;
+        const raw = angle?.[0];
+        const pending = turned && Number.isFinite(raw);
+        const next = pending && Number.isFinite(cur) ? clamp(cur + Math.trunc(-raw / 4), -32000, 32000) : null;
+        const scaleText = (v) => (v === undefined || v === null ? '–' : v === 0 ? `0 (${t('gyro.scaleNominal')})` : v);
+        return (
+          <>
+            <NeedRobot />
+            {pending ? (
+              <>
+                <div className="stats">
+                  <Stat label={t('gyro.s5.angle')}>{angle[1]}° <span className="muted small">({raw} {t('gyro.s5.units')})</span></Stat>
+                  <Stat label={t('gyro.s5.current')}>{scaleText(cur)}</Stat>
+                  <Stat label={t('gyro.s5.new')}>{scaleText(next)}</Stat>
+                </div>
+                <p className="muted small">{t('gyro.s5.formula')}</p>
+              </>
+            ) : (
+              <Notice tone={scaleSaved ? 'ok' : 'info'}>{scaleSaved ? t('gyro.s5.saved', { scale: cur ?? '–' }) : t('gyro.s5.none')}</Notice>
+            )}
+            <SaveRow>
+              <Btn kind="primary" disabled={!pending} onClick={async () => { if (await run('gyroScaleSave')) { setScaleSaved(true); setTurned(false); setAngle(null); } }}>{t('gyro.saveScale')}</Btn>
+              <Btn disabled={!turned} onClick={readAngle}>{t('gyro.s5.reread')}</Btn>
+              <Btn needsRobot={false} onClick={() => goTo(3)}>{t('gyro.s5.again')}</Btn>
+              <FactoryButton op="gyroScaleReset" onDone={() => { setScaleSaved(true); setTurned(false); setAngle(null); }} />
+            </SaveRow>
+          </>
+        );
+      },
     },
   ];
   return <Wizard icon="gyro" title={t('gyro.title')} intro={t('gyro.short')} steps={steps} onExit={onExit} />;

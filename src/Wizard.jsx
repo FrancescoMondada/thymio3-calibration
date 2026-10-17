@@ -50,7 +50,7 @@ export function Wizard({ icon, title, intro, steps, onExit }) {
           <h3>{step.title}</h3>
           <p>{rich(step.text)}</p>
           {step.tip && <Notice tone="tip">{step.tip}</Notice>}
-          <div className="controls">{step.body}</div>
+          <div className="controls">{typeof step.body === 'function' ? step.body({ goTo: setIndex }) : step.body}</div>
         </div>
       </div>
 

@@ -232,7 +232,7 @@ export function NGyro({ onExit }) {
     if (!(await run('gyroOffsetsSave'))) { setStatus(''); return; }
     setOffPending(false);
     setStatus('turning');
-    const r = await run('gyroTurn', { measure: true });
+    const r = await run('gyroTurn');
     setStatus('');
     if (r) c.next();
   };

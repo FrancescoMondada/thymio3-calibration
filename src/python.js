@@ -135,11 +135,10 @@ i.enable_gyro_auto_calib()
 out("gyroOffsets", list(i.get_gyro_calib()))`,
 
   // ---- gyroscope: rotation scale ----------------------------------------
-  // measure=true : the scale is reset to the nominal value, the robot turns
-  //                -360°, then the angle is zeroed so the nudges are counted.
-  // measure=false: verification turn with the stored scale; the angle left
-  //                over at the end is reported.
-  gyroTurn: ({ measure }) => `i.reset_angle()
+  // Full turn with the stored scale. The angle is zeroed at the END of the turn, so everything counted
+  // afterwards (nudges, hand rotation) is exactly the correction needed. (A turn that did not zero it
+  // would leave ~360° in the counter and the next save would compute a huge scale.)
+  gyroTurn: () => `i.reset_angle()
 i.rotate_deg(-360, ${MOVE_SPEED})
 t = time.ticks_ms()
 while not i.rotation_completed():
@@ -147,7 +146,8 @@ while not i.rotation_completed():
         break
     time.sleep_ms(50)
 time.sleep_ms(400)
-${measure ? 'i.reset_angle()\n' : ''}${angleOut}`,
+i.reset_angle()
+${angleOut}`,
   gyroNudge: ({ dir }) => `m.set_speed(${NUDGE_SPEED * dir}, ${-NUDGE_SPEED * dir})
 time.sleep_ms(${NUDGE_MS})
 m.set_speed(0, 0)

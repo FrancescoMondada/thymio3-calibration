@@ -66,6 +66,8 @@ wizards **start from what the robot already stores** (read when you connect):
 - **Gyroscope rotation scale**: the turn is made with the stored scale and the error you compensate is
   **added** to it, so another turn refines an existing calibration (the menu restarts from the nominal scale).
   This incremental rule is a first-order approximation (the firmware does not document it); it behaved as expected on a real robot.
+  Expert step 5 shows the angle you corrected since the end of the turn, the current scale and the new scale
+  (`new = current − angle ÷ 4`) before saving; to check the result, simply run another turn from step 4.
 - Factory values are only applied through the explicit *Factory values* button.
 - Nothing is permanent until *Save*: leaving a wizard with a trial value applied puts back what the robot had.
   If the current values cannot be read, the wizard says so and starts from the factory values.
