@@ -282,14 +282,20 @@ export function ColorWizard({ onExit }) {
 // =============================================================================
 // Ground sensors
 // =============================================================================
-function GroundLive() {
+// `raw`: the measurement the capture stores (reflected − ambient, from the "others" stream).
+// Otherwise the calibrated 0–1023 value the robot computes from the stored black/white ("main" stream).
+function GroundLive({ raw }) {
   const t = useT();
   const { tel } = useRobot();
+  const diff = (r, a) => (Number.isFinite(r) && Number.isFinite(a) ? Math.max(0, r - a) : undefined);
+  const l = raw ? diff(tel.reflected?.l, tel.ambient?.l) : tel.ground?.l;
+  const r = raw ? diff(tel.reflected?.r, tel.ambient?.r) : tel.ground?.r;
   return (
     <div className="live">
-      <div className="live-title">{t('common.live')}</div>
-      <Meter label={t('ground.left')} value={tel.ground?.l} max={1023} />
-      <Meter label={t('ground.right')} value={tel.ground?.r} max={1023} />
+      <div className="live-title">{t(raw ? 'ground.liveRaw' : 'ground.liveCal')}</div>
+      <Meter label={t('ground.left')} value={l} max={1023} />
+      <Meter label={t('ground.right')} value={r} max={1023} />
+      <p className="muted small">{t(raw ? 'ground.liveRaw.note' : 'ground.liveCal.note')}</p>
     </div>
   );
 }
@@ -315,7 +321,7 @@ export function GroundWizard({ onExit }) {
   const captureStep = (kind) => (
     <>
       <NeedRobot />
-      <GroundLive />
+      <GroundLive raw />
       <div className="row"><Btn kind="primary" onClick={() => capture(kind)}>{kind === 'white' ? t('ground.white') : t('ground.black')}</Btn></div>
       {sample[kind] && (
         <p className="muted small">{t('ground.sample')} : {t('ground.left')} {sample[kind][0]} · {t('ground.right')} {sample[kind][1]}</p>
@@ -325,8 +331,8 @@ export function GroundWizard({ onExit }) {
 
   const steps = [
     { title: t('ground.s1.title'), text: t('ground.s1.text'), tip: t('ground.s1.tip'), art: <GroundArt label={t('ground.s1.title')} kind="white" /> },
-    { live: 'main', title: t('ground.s2.title'), text: t('ground.s2.text'), art: <GroundArt label={t('ground.s2.title')} kind="white" />, body: captureStep('white') },
-    { live: 'main', title: t('ground.s3.title'), text: t('ground.s3.text'), art: <GroundArt label={t('ground.s3.title')} kind="black" />, body: captureStep('black') },
+    { live: 'others', title: t('ground.s2.title'), text: t('ground.s2.text'), art: <GroundArt label={t('ground.s2.title')} kind="white" />, body: captureStep('white') },
+    { live: 'others', title: t('ground.s3.title'), text: t('ground.s3.text'), art: <GroundArt label={t('ground.s3.title')} kind="black" />, body: captureStep('black') },
     {
       live: 'main', title: t('ground.s4.title'), text: t('ground.s4.text'), art: <GroundArt label={t('ground.s4.title')} kind="white" />,
       body: (

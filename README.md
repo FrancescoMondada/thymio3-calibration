@@ -110,6 +110,8 @@ Implementation notes (choices made from the firmware sources):
   scale (see *Starting point* above).
 - Scripts disable and re-enable the behaviours around each step.
 - Ground values are averaged over 10 samples (the menu takes a single sample after the same 1 s wait).
+- Ground sensors, Expert view: the measurement steps show the **raw** reading (reflected − ambient), which is what gets stored;
+  the final check shows the robot's **calibrated** 0–1023 value (0 = stored black, 1023 = stored white, clamped), so the two numbers differ on purpose.
 
 Known approximations: the positions of the underside sensors in the drawings were measured on the 3D model
 and may be a few millimetres off; the robot cannot report which values are *saved* (only the ones it uses),
