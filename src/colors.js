@@ -7,7 +7,7 @@ const DETECTED = [
   ['red', [3.7, 100, 100, 0.37]],
   ['orange', [11, 38, 100, 0]],
   ['lightGreen', [30, 0, 100, 0]],
-  ['darkGreen', [67, 0, 100, 0]],
+  ['darkGreen', [67, 0, 100, 0], 'rgb(24, 112, 48)'],   // the API demo's value renders as a bright green: use a real dark green
   ['blue', [87, 76, 0, 0]],
   ['violet', [44, 84, 0, 0]],
   ['white', [0, 0, 0, 0]],
@@ -19,7 +19,8 @@ export function detectedColour(value) {
   if (!Number.isInteger(value)) return null;
   const entry = DETECTED[value];
   if (!entry) return { key: 'unknown', css: null };
-  const [key, [c, m, y, k]] = entry;
+  const [key, [c, m, y, k], css] = entry;
+  if (css) return { key, css };
   const ch = (ink) => Math.round(255 * (1 - ink / 100) * (1 - k / 100));
   return { key, css: `rgb(${ch(c)}, ${ch(m)}, ${ch(y)})` };
 }
