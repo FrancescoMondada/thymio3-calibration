@@ -12,18 +12,6 @@ const EV = {
   pyStatus: 'thymio-python-execution-status',
 };
 
-function hsvToCss(h, s, v) {
-  const hue = ((Math.max(0, Math.min(360, h)) % 360) + 360) % 360;
-  const sat = Math.max(0, Math.min(1, s / 100));
-  const val = Math.max(0, Math.min(1, v / 100));
-  const c = val * sat;
-  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
-  const m = val - c;
-  const [r, g, b] =
-    hue < 60 ? [c, x, 0] : hue < 120 ? [x, c, 0] : hue < 180 ? [0, c, x] : hue < 240 ? [0, x, c] : hue < 300 ? [x, 0, c] : [c, 0, x];
-  return `rgb(${Math.round((r + m) * 255)},${Math.round((g + m) * 255)},${Math.round((b + m) * 255)})`;
-}
-
 const STDOUT_GRACE_MS = 4000;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const withTimeout = (promise, ms) => Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
@@ -42,7 +30,7 @@ export class RealRobot {
     this.live = null;         // wanted: 'main' | 'others' | null
     this.liveOn = null;       // what is running on the robot
     this.liveBlocked = false; // set when the firmware starts sending empty notifications (buffers exhausted)
-    this.tel = { ground: {}, reflected: {}, ambient: {}, colorRaw: {}, hsv: {}, gyro: {}, buttons: {} };
+    this.tel = { ground: {}, reflected: {}, ambient: {}, colorRaw: {}, gyro: {}, buttons: {} };
   }
 
   // Timestamped line for the communication log shown in the UI.
@@ -85,11 +73,8 @@ export class RealRobot {
     this.onMain = (e) => {
       const d = e.detail;
       if (!d) return;
-      const { h, s, v } = d.colorSensor;
       Object.assign(this.tel, {
         ground: { l: d.groundSensors.left, r: d.groundSensors.right },
-        hsv: { h, s, v },
-        colorCss: hsvToCss(h, s, v),
         gyro: { ...d.gyroRaw },
         buttons: { ...d.buttons },
       });
@@ -101,7 +86,9 @@ export class RealRobot {
       Object.assign(this.tel, {
         reflected: { l: d.groundReflected.left, r: d.groundReflected.right },
         ambient: { l: d.groundAmbient.left, r: d.groundAmbient.right },
-        colorRaw: { ...d.colorRaw },
+        // the API names the channels red/green/blue/clear
+        colorRaw: { r: d.colorRaw.red, g: d.colorRaw.green, b: d.colorRaw.blue, c: d.colorRaw.clear },
+        colorDetected: d.colorDetected,
         angleDeg: d.angleDegrees,
         battery: d.batteryVoltage / 1000,
       });
@@ -154,7 +141,7 @@ export class RealRobot {
     await sleep(500);
   }
   clearLiveTelemetry() {
-    Object.assign(this.tel, { ground: {}, reflected: {}, ambient: {}, colorRaw: {}, hsv: {}, gyro: {}, buttons: {}, angleDeg: undefined, colorCss: undefined });
+    Object.assign(this.tel, { ground: {}, reflected: {}, ambient: {}, colorRaw: {}, gyro: {}, buttons: {}, angleDeg: undefined, colorDetected: undefined });
     this.push();
   }
 

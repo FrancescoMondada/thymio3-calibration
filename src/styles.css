@@ -284,3 +284,5 @@ footer { padding-top: 24px; text-align: center; }
 .hand-callout { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 14px; border: 2px solid var(--accent); background: var(--accent-soft); font-size: 18px; line-height: 1.4; }
 .hand-callout svg { flex: none; }
 .hand-callout strong { color: var(--accent); }
+
+.det-name { font-size: 24px; font-weight: 800; line-height: 1.2; }

@@ -8,7 +8,7 @@ const STORED_KEYS = ['straight', 'distance', 'color', 'gyroOffsets', 'gyroScale'
 
 export function RobotProvider({ children }) {
   const [conn, setConn] = useState({ status: 'disconnected' });
-  const [tel, setTel] = useState({ fresh: false, ground: {}, reflected: {}, ambient: {}, colorRaw: {}, hsv: {}, gyro: {}, buttons: {} });
+  const [tel, setTel] = useState({ fresh: false, ground: {}, reflected: {}, ambient: {}, colorRaw: {}, gyro: {}, buttons: {} });
   const [stored, setStored] = useState(null);          // what the robot reported last
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');

@@ -13,12 +13,14 @@ export function Btn({ children, onClick, kind = 'default', disabled, title, wide
 }
 
 // Horizontal meter, value in [0, max].
-export function Meter({ label, value, max = 1023, tone = 'accent', suffix }) {
+export function Meter({ label, value, max = 1023, tone = 'accent', suffix, shown }) {
+  // `value`/`max` drive the bar; `shown` (optional) is the number written next to the label
   const v = Number.isFinite(value) ? value : 0;
   const pct = Math.max(0, Math.min(100, (v / max) * 100));
+  const text = shown !== undefined ? shown : Number.isFinite(value) ? Math.round(v) : '–';
   return (
     <div className="meter">
-      <div className="meter-head"><span>{label}</span><b>{Number.isFinite(value) ? Math.round(v) : '–'}{suffix}</b></div>
+      <div className="meter-head"><span>{label}</span><b>{text}{suffix}</b></div>
       <div className="meter-track"><div className={`meter-fill tone-${tone}`} style={{ width: `${pct}%` }} /></div>
     </div>
   );

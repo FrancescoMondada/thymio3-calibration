@@ -4,6 +4,7 @@ import { useRobot } from './useRobot.jsx';
 import { Btn, Meter, Stat, Notice, Swatch, NeedRobot, fmt } from './ui.jsx';
 import { Wizard } from './Wizard.jsx';
 import { StraightArt, DistanceArt, ColorArt, GroundArt, GyroStillArt, GyroTurnArt } from './art.jsx';
+import { detectedColour } from './colors.js';
 import { FACTORY, MOTOR_BASE, MOTOR_CORR_MAX, DIST_STEP, TICKS_PER_MS } from './python.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -196,16 +197,28 @@ export function DistanceWizard({ onExit }) {
 // =============================================================================
 // Colour sensor
 // =============================================================================
+// Raw colour channels. The number is the sensor's raw reading; the bar places it between the stored black
+// (empty) and white (full) references of that channel, which is the scale the firmware uses to recognise
+// colours. Without stored references the bar uses a fixed scale.
 function ColorLive() {
   const t = useT();
-  const { tel } = useRobot();
+  const { tel, stored } = useRobot();
   const c = tel.colorRaw || {};
+  const cal = stored?.color;                    // [Rw, Gw, Bw, Rb, Gb, Bb]
+  const row = (label, key, k, tone) => {
+    const raw = c[key];
+    const white = cal?.[k], black = cal?.[3 + k];
+    const ok = Number.isFinite(raw);
+    const rel = ok && cal && white !== black ? ((raw - black) / (white - black)) * 100 : ok ? (raw / 16000) * 100 : 0;
+    return <Meter key={key} label={label} value={rel} max={100} tone={tone} shown={ok ? raw : '–'} />;
+  };
   return (
     <div className="live">
       <div className="live-title">{t('color.raw')}</div>
-      <Meter label="R" value={c.r} max={16000} tone="red" />
-      <Meter label="G" value={c.g} max={16000} tone="green" />
-      <Meter label="B" value={c.b} max={16000} tone="blue" />
+      {row('R', 'r', 0, 'red')}
+      {row('G', 'g', 1, 'green')}
+      {row('B', 'b', 2, 'blue')}
+      <p className="muted small">{Number.isFinite(c.r) ? (cal ? t('color.rawHint') : '') : t('color.waiting')}</p>
     </div>
   );
 }
@@ -214,6 +227,7 @@ export function ColorWizard({ onExit }) {
   const t = useT();
   const { run, stored, tel } = useRobot();
   const [done, setDone] = useState({});
+  const det = detectedColour(tel.colorDetected);
   const cal = stored?.color;
   const capture = async (kind) => { const r = await run('colorCapture', { kind }); if (r) setDone((d) => ({ ...d, [kind]: true })); };
 
@@ -246,19 +260,15 @@ export function ColorWizard({ onExit }) {
       ),
     },
     {
-      live: 'main', title: t('color.s4.title'), text: t('color.s4.text'), art: <ColorArt label={t('color.s4.title')} kind="white" />,
+      live: 'others', title: t('color.s4.title'), text: t('color.s4.text'), art: <ColorArt label={t('color.s4.title')} kind="white" />,
       body: (
         <>
           <NeedRobot />
           <div className="color-check">
-            <div className="color-big" style={{ background: tel.colorCss || 'transparent' }} />
+            <div className="color-big" style={{ background: det?.css || 'transparent' }} />
             <div>
               <div className="live-title">{t('color.preview')}</div>
-              <div className="stats">
-                <Stat label="H">{tel.hsv?.h ?? '–'}°</Stat>
-                <Stat label="S">{tel.hsv?.s ?? '–'}</Stat>
-                <Stat label="V">{tel.hsv?.v ?? '–'}</Stat>
-              </div>
+              <div className="det-name">{det ? t(`color.det.${det.key}`) : t('color.waiting')}</div>
             </div>
           </div>
           <p className="muted small">{t('color.noFactory')}</p>
