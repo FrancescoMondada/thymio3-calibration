@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { I18nContext, LANGS, initialLang, makeT, useT } from './i18n.js';
+import { I18nContext, LANGS, initialLang, makeT, useT, useLang } from './i18n.js';
 import { RobotProvider, useRobot } from './useRobot.jsx';
 import { supportsBluetooth } from './robot.js';
 import { WIZARDS } from './registry.js';
@@ -83,6 +83,7 @@ function BrowserWarning() {
 
 function Stored() {
   const t = useT();
+  const colon = useLang() === 'fr' ? ' : ' : ': ';
   const { stored, ready, refresh, busy } = useRobot();
   const rows = [
     ['straight', 'val.straight', FACTORY.motors],
@@ -93,10 +94,29 @@ function Stored() {
     ['color', 'val.color', null],
   ];
   const groundFactory = [FACTORY.groundBlack, FACTORY.groundBlack, FACTORY.groundWhite, FACTORY.groundWhite];
+  // The format of each value follows its label: "(left / right)" → "256 / 256", "(x, y, z)" → "83, 359, 285";
+  // references that hold several numbers are written out on separate, named lines.
   const show = (key, v) => {
     if (v === undefined) return t('home.notRead');
-    if (key === 'ground') return `${v[0]} · ${v[1]}  /  ${v[2]} · ${v[3]}`;
-    if (key === 'color') return `${v.slice(0, 3).join(' · ')}  /  ${v.slice(3).join(' · ')}`;
+    if (key === 'gyroOffsets') return v.join(', ');
+    if (key === 'color') {
+      const rgb = (a) => [`${t('val.r')} ${a[0]}`, `${t('val.g')} ${a[1]}`, `${t('val.b')} ${a[2]}`].join(' · ');
+      return (
+        <span className="kv-lines">
+          <span><b>{t('val.white')}</b>{colon}{rgb(v.slice(0, 3))}</span>
+          <span><b>{t('val.black')}</b>{colon}{rgb(v.slice(3, 6))}</span>
+        </span>
+      );
+    }
+    if (key === 'ground') {
+      const lr = (l, r) => `${t('val.left')} ${l} · ${t('val.right')} ${r}`;
+      return (
+        <span className="kv-lines">
+          <span><b>{t('val.black')}</b>{colon}{lr(v[0], v[1])}</span>
+          <span><b>{t('val.white')}</b>{colon}{lr(v[2], v[3])}</span>
+        </span>
+      );
+    }
     return fmt(v);
   };
   return (
@@ -112,11 +132,12 @@ function Stored() {
         {rows.map(([key, label, factory]) => {
           const v = stored?.[key];
           const f = key === 'ground' ? groundFactory : factory;
-          const isFactory = v !== undefined && f && (Array.isArray(f) ? same(v, f) : v === f);
+          const hasFactory = f !== null && f !== undefined;
+          const isFactory = v !== undefined && hasFactory && (Array.isArray(f) ? same(v, f) : v === f);
           return (
             <div className="kv" key={key}>
               <dt>{t(label)}</dt>
-              <dd>{show(key, v)}{v !== undefined && f && <span className={`tag ${isFactory ? '' : 'tag-changed'}`}>{isFactory ? t('home.factory') : t('home.changed')}</span>}</dd>
+              <dd>{show(key, v)}{v !== undefined && hasFactory && <span className={`tag ${isFactory ? '' : 'tag-changed'}`}>{isFactory ? t('home.factory') : t('home.changed')}</span>}</dd>
             </div>
           );
         })}

@@ -286,3 +286,6 @@ footer { padding-top: 24px; text-align: center; }
 .hand-callout strong { color: var(--accent); }
 
 .det-name { font-size: 24px; font-weight: 800; line-height: 1.2; }
+
+.kv-lines { display: inline-flex; flex-direction: column; gap: 2px; vertical-align: top; }
+.kv-lines b { font-weight: 700; }

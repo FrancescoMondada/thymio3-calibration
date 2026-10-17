@@ -219,7 +219,12 @@ export function Icon({ name }) {
   const body = {
     straight: <><path d="M16 4 V44" strokeDasharray="4 4" /><rect x="9" y="20" width="14" height="18" rx="4" /><path d="M16 4 l-5 7 M16 4 l5 7" /></>,
     distance: <><path d="M4 38 H44" /><path d="M8 32 V44 M40 32 V44" /><rect x="6" y="12" width="14" height="14" rx="4" /><path d="M24 19 H40 m-5 -5 l5 5 l-5 5" /></>,
-    color: <><circle cx="24" cy="24" r="16" /><path d="M24 8 A16 16 0 0 1 40 24 H24 Z" fill="currentColor" opacity=".35" /><path d="M24 24 L10 34" /></>,
+    // red, green and blue discs overlapping: the universal "colour" symbol (keeps its own colours)
+    color: <g stroke="none">
+      <circle cx="24" cy="16.5" r="11.5" fill="#e5483f" fillOpacity=".78" />
+      <circle cx="16.5" cy="29.5" r="11.5" fill="#35b36a" fillOpacity=".78" />
+      <circle cx="31.5" cy="29.5" r="11.5" fill="#3f6df5" fillOpacity=".78" />
+    </g>,
     ground: <><rect x="8" y="8" width="32" height="18" rx="5" /><circle cx="17" cy="30" r="2" /><circle cx="31" cy="30" r="2" /><path d="M17 33 L12 42 M17 33 L22 42 M31 33 L26 42 M31 33 L36 42" /></>,
     gyro: <><circle cx="24" cy="24" r="6" /><path d="M24 6 A18 18 0 0 1 42 24" /><path d="M42 24 l-5 -5 M42 24 l5 -5" /><path d="M24 42 A18 18 0 0 1 6 24" /></>,
   }[name];

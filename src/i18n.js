@@ -1,8 +1,12 @@
 import { createContext, useContext } from 'react';
+import de from './i18n-de.js';
+import it from './i18n-it.js';
 
 export const LANGS = [
   { id: 'fr', label: 'FR' },
   { id: 'en', label: 'EN' },
+  { id: 'de', label: 'DE' },
+  { id: 'it', label: 'IT' },
 ];
 
 const fr = {
@@ -63,8 +67,6 @@ const fr = {
   'common.fromFirmware': 'Procédure reprise du firmware',
   'common.leaveRestores': 'Si vous quittez cet assistant sans enregistrer, les valeurs précédemment enregistrées dans le robot sont rétablies.',
   'common.noCurrent': 'Les valeurs actuelles du robot n’ont pas pu être lues : on part des valeurs d’usine.',
-  'common.leaveRestores': 'If you leave this wizard without saving, the values previously saved in the robot are put back.',
-  'common.noCurrent': 'The robot’s current values could not be read: starting from the factory values.',
   'common.needRobot': 'Connectez le robot pour utiliser cette étape.',
 
   // ---- straight ----
@@ -193,10 +195,12 @@ const fr = {
   // ---- stored values labels ----
   'val.straight': 'Moteurs : ligne droite (gauche / droit)',
   'val.distance': 'Moteurs : 15 cm (avant / arrière)',
-  'val.color': 'Couleur : blanc / noir (R, V, B)',
+  'val.color': 'Couleur : références blanc et noir',
   'val.gyroOffsets': 'Gyroscope : offsets (x, y, z)',
   'val.gyroScale': 'Gyroscope : échelle de rotation',
-  'val.ground': 'Sol : noir / blanc (gauche, droit)',
+  'val.ground': 'Capteurs de sol : références noir et blanc',
+  'val.white': 'Blanc', 'val.black': 'Noir', 'val.left': 'gauche', 'val.right': 'droit',
+  'val.r': 'R', 'val.g': 'V', 'val.b': 'B',
 
   'footer.credit': 'Basé sur le firmware et l’API Thymio 3 de Mobsya. Les calibrations sont écrites par le firmware lui-même.',
 
@@ -320,6 +324,8 @@ const en = {
   'common.waitRobot': 'Communicating with the robot…',
   'common.cancel': 'Cancel',
   'common.fromFirmware': 'Procedure taken from the firmware',
+  'common.leaveRestores': 'If you leave this wizard without saving, the values previously saved in the robot are put back.',
+  'common.noCurrent': 'The robot’s current values could not be read: starting from the factory values.',
   'common.needRobot': 'Connect the robot to use this step.',
 
   'straight.title': 'Motors: straight line',
@@ -442,10 +448,12 @@ const en = {
 
   'val.straight': 'Motors: straight line (left / right)',
   'val.distance': 'Motors: 15 cm (forward / backward)',
-  'val.color': 'Colour: white / black (R, G, B)',
+  'val.color': 'Colour: white and black references',
   'val.gyroOffsets': 'Gyroscope: offsets (x, y, z)',
   'val.gyroScale': 'Gyroscope: rotation scale',
-  'val.ground': 'Ground: black / white (left, right)',
+  'val.ground': 'Ground sensors: black and white references',
+  'val.white': 'White', 'val.black': 'Black', 'val.left': 'left', 'val.right': 'right',
+  'val.r': 'R', 'val.g': 'G', 'val.b': 'B',
 
   'footer.credit': 'Built on Mobsya’s Thymio 3 firmware and API. The calibrations are written by the firmware itself.',
 
@@ -513,12 +521,13 @@ const en = {
   'n.color.black.button': 'Measure black',
 };
 
-const DICTS = { fr, en };
+const DICTS = { fr, en, de, it };
 
 export function makeT(lang) {
-  const dict = DICTS[lang] || fr;
+  const dict = DICTS[lang] || en;
   return (key, vars) => {
-    let s = dict[key] ?? fr[key] ?? key;
+    // a missing translation falls back to English, then French
+    let s = dict[key] ?? en[key] ?? fr[key] ?? key;
     if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v));
     return s;
   };
@@ -533,5 +542,6 @@ export function initialLang() {
     const saved = localStorage.getItem('t3cal.lang');
     if (saved && DICTS[saved]) return saved;
   } catch { /* storage unavailable */ }
-  return (navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+  const browser = (navigator.language || 'en').toLowerCase().slice(0, 2);
+  return DICTS[browser] ? browser : 'en';
 }

@@ -9,7 +9,7 @@ exactly where the on-robot menu stores them.
 
 Open it in **Google Chrome or Microsoft Edge** (Web Bluetooth is not available in Firefox or Safari; the
 app shows a prominent warning there), switch the robot on and click *Connect robot*. The interface is
-available in French and English.
+available in French, English, German and Italian (the language follows your browser and can be changed in the top bar).
 
 ## Two versions of the interface
 
@@ -157,7 +157,7 @@ src/robot.js       RealRobot: Web Bluetooth via thymio3-ts-api, streaming and sc
 src/wizards.jsx    The five Expert wizards   src/Wizard.jsx  Expert step-by-step shell
 src/normal.jsx     The five Normal wizards (short flows, no values)    src/registry.js  Both sets
 src/robot-art.jsx  Robot drawings (top, bottom, side)    src/art.jsx  Illustration per step
-src/i18n.js        French / English strings  src/useRobot.jsx  Connection, telemetry, busy/error state
+src/i18n.js (+ i18n-de.js, i18n-it.js)  FR / EN / DE / IT strings  src/useRobot.jsx  Connection, telemetry, busy/error state
 ```
 
 Deployment: every push to `main` builds the site and publishes it with GitHub Actions
