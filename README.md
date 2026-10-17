@@ -11,6 +11,8 @@ Open it in **Google Chrome or Microsoft Edge** (Web Bluetooth is not available i
 app shows a prominent warning there), switch the robot on and click *Connect robot*. The interface is
 available in French, English, German and Italian (the language follows your browser and can be changed in the top bar).
 
+**Tested on a real Thymio 3: the five calibrations work, in both the Normal and the Expert version.**
+
 ## Two versions of the interface
 
 The switch in the top bar (**Normal | Expert**) chooses the version; the choice is remembered, and
@@ -31,7 +33,7 @@ In Normal, the straight line converges by **halving the step each time the answe
 line – by far* = 4 % of the duration, *did not reach the line* = 1 %, same for *went past*); after each run the
 test can simply be **repeated** without answering, the gyroscope runs the offsets measurement and the full turn from a
 single *Start*, and the ground sensors refuse a measurement where white and black are not clearly different.
-The Normal version is a first draft meant to be refined with user testing.
+The Normal version keeps being refined with user feedback.
 
 ## The five wizards (Expert)
 
@@ -63,7 +65,7 @@ wizards **start from what the robot already stores** (read when you connect):
 - **Gyroscope offsets**: a new resting measurement (replaces the old one, by nature).
 - **Gyroscope rotation scale**: the turn is made with the stored scale and the error you compensate is
   **added** to it, so another turn refines an existing calibration (the menu restarts from the nominal scale).
-  This incremental rule is a first-order assumption, not documented by the firmware: check it on hardware.
+  This incremental rule is a first-order approximation (the firmware does not document it); it behaved as expected on a real robot.
 - Factory values are only applied through the explicit *Factory values* button.
 - Nothing is permanent until *Save*: leaving a wizard with a trial value applied puts back what the robot had.
   If the current values cannot be read, the wizard says so and starts from the factory values.
@@ -90,23 +92,28 @@ Every script disables the robot's behaviours at the start and re-enables them in
 block with the motors stopped, so the **STOP** button and errors leave the robot in a clean state.
 Not included: volume and Wi-Fi credential reset (menu entries that are not calibrations).
 
-## Status — please read
+## Status
 
-The procedures come from the firmware sources, and the Bluetooth layer was checked against a mocked
-robot, but **the full set of calibrations has not yet been validated on a physical robot**. Points to
-check on hardware:
+**Tested on a physical Thymio 3**: all five calibrations (straight line, 15 cm distance, gyroscope
+offsets and rotation scale, ground sensors, colour sensor) worked as expected in both versions of the
+interface. The values are written by the firmware's own save functions, i.e. where the on-robot menu stores
+them. Testing on real hardware is also what exposed the Bluetooth limits of the robot, described under
+*Troubleshooting* below and handled by the app.
+
+Implementation notes (choices made from the firmware sources):
 
 - `MOTORS.set_straight_calibration` is documented as ±50 but the firmware code expects raw values
   206–306; the app sends raw values (256 ± correction), reads them back and warns on mismatch.
-- The gyroscope rotation scale follows the firmware formula (`-angle / 4`); the direction of the
-  *a bit left / a bit right* nudges and the angle unit should be confirmed.
-- Scripts disable and re-enable the behaviours around each step; the gyro angle integration is
-  assumed to keep running in between.
+- The gyroscope rotation scale starts from the firmware formula (`-angle / 4`) and is added to the stored
+  scale (see *Starting point* above).
+- Scripts disable and re-enable the behaviours around each step.
 - Ground values are averaged over 10 samples (the menu takes a single sample after the same 1 s wait).
-- Positions of the underside sensors in the drawings were measured on the 3D model and may be a
-  few millimetres off.
 
-Issues and corrections are welcome.
+Known approximations: the positions of the underside sensors in the drawings were measured on the 3D model
+and may be a few millimetres off; the robot cannot report which values are *saved* (only the ones it uses),
+so the app assumes both are identical at connection (a restart of the robot always restores that).
+
+Please report anything that behaves differently on another robot or firmware version.
 
 ### Troubleshooting
 
