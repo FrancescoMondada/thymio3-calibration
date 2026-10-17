@@ -19,7 +19,7 @@ function HeaderInfo() {
   const { conn } = r;
   if (conn.status !== 'connected') return <div className="top-info" />;
   // live value when the "others" stream runs, otherwise the one read with the settings
-  const v = r.tel.battery > 0 ? r.tel.battery : (r.stored?.battery > 0 ? r.stored.battery / 1000 : 0);
+  const v = r.tel.battery > 0 ? r.tel.battery : (r.saved?.battery > 0 ? r.saved.battery / 1000 : 0);
   return (
     <div className="top-info">
       {conn.device && <span className="chip chip-device" title={conn.device}>{conn.device}</span>}
@@ -84,7 +84,7 @@ function BrowserWarning() {
 function Stored() {
   const t = useT();
   const colon = useLang() === 'fr' ? ' : ' : ': ';
-  const { stored, ready, refresh, busy } = useRobot();
+  const { saved, ready, refresh, busy } = useRobot();   // saved = what is stored in the robot's memory, not trial values
   const rows = [
     ['straight', 'val.straight', FACTORY.motors],
     ['distance', 'val.distance', FACTORY.distance],
@@ -126,12 +126,12 @@ function Stored() {
         <p className="muted small">{t('home.storedHint')}</p>
         <button type="button" className="btn btn-ghost" onClick={refresh} disabled={!ready || busy}>{t('home.refresh')}</button>
       </div>
-      {stored?.readErrors && (
-        <Notice tone="warn">{t('home.readErrors')} {Object.keys(stored.readErrors).join(', ')}</Notice>
+      {saved?.readErrors && (
+        <Notice tone="warn">{t('home.readErrors')} {Object.keys(saved.readErrors).join(', ')}</Notice>
       )}
       <dl>
         {rows.map(([key, label, factory]) => {
-          const v = stored?.[key];
+          const v = saved?.[key];
           const f = key === 'ground' ? groundFactory : factory;
           const hasFactory = f !== null && f !== undefined;
           const isFactory = v !== undefined && hasFactory && (Array.isArray(f) ? same(v, f) : v === f);

@@ -31,8 +31,8 @@ export default {
 
   'home.intro': 'Scegli una calibrazione. Ogni procedura guidata segue quella dei menu del robot (tieni premuto ◀ ▶ per 3 s), la illustra e poi salva i valori nella memoria del robot esattamente come fa il firmware.',
   'home.connectFirst': 'Collega il robot per iniziare.',
-  'home.stored': 'Valori attualmente nel robot',
-  'home.storedHint': 'Qui compare anche un valore in prova, non ancora salvato.',
+  'home.stored': 'Valori salvati nel robot',
+  'home.storedHint': 'Ciò che è salvato nella memoria del robot. Un valore in prova compare qui solo dopo essere stato salvato.',
   'home.refresh': 'Rileggi',
   'home.readErrors': 'Valori che questo firmware non ha potuto leggere (versione più vecchia?):',
   'home.notRead': 'Non ancora letto',

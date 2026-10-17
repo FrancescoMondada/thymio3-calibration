@@ -19,7 +19,7 @@ The switch in the top bar (**Normal | Expert**) chooses the version; the choice 
 | | **Normal** (default, for non-technical users) | **Expert** |
 |---|---|---|
 | Steps per calibration | 2–3: prepare → act → done | 3–5 with the details |
-| Values | none shown | live readings, correction slider… and a collapsible *Values currently in the robot* block under every view |
+| Values | none shown | live readings, correction slider… and a collapsible *Values saved in the robot* block under every view (it shows only what is saved: a value being tested appears once saved) |
 | Factory values | none | explicit button in every wizard |
 | Intermediate measurements | none: plain questions instead (*did it go straight?*) | live sensors, test runs with numbers |
 | Saving | automatic at the end of the flow | explicit *Save* |

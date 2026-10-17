@@ -41,8 +41,8 @@ const fr = {
 
   'home.intro': 'Choisissez une calibration. Chaque assistant reprend la procédure des menus du robot (appui long sur ◀ ▶ pendant 3 s), l’illustre, puis enregistre les valeurs dans la mémoire du robot exactement comme le fait le firmware.',
   'home.connectFirst': 'Connectez le robot pour commencer.',
-  'home.stored': 'Valeurs actuellement dans le robot',
-  'home.storedHint': 'Une valeur en cours d’essai, pas encore enregistrée, y apparaît aussi.',
+  'home.stored': 'Valeurs enregistrées dans le robot',
+  'home.storedHint': 'Ce qui est enregistré dans la mémoire du robot. Une valeur en cours d’essai n’y apparaît qu’une fois enregistrée.',
   'home.refresh': 'Relire',
   'home.readErrors': 'Valeurs que ce firmware n’a pas pu lire (version trop ancienne ?) :',
   'home.notRead': 'Pas encore lu',
@@ -301,8 +301,8 @@ const en = {
 
   'home.intro': 'Pick a calibration. Each wizard follows the procedure of the robot’s own menus (hold ◀ ▶ for 3 s), illustrates it, then stores the values in the robot’s memory exactly as the firmware does.',
   'home.connectFirst': 'Connect the robot to begin.',
-  'home.stored': 'Values currently in the robot',
-  'home.storedHint': 'A value being tested and not saved yet also appears here.',
+  'home.stored': 'Values saved in the robot',
+  'home.storedHint': 'What is saved in the robot’s memory. A value being tested only appears here once it is saved.',
   'home.refresh': 'Read again',
   'home.readErrors': 'Values this firmware could not read (older version?):',
   'home.notRead': 'Not read yet',

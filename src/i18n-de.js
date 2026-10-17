@@ -31,8 +31,8 @@ export default {
 
   'home.intro': 'Wählen Sie eine Kalibrierung. Jeder Assistent folgt dem Ablauf der Menüs des Roboters (◀ ▶ 3 s gedrückt halten), veranschaulicht ihn und speichert die Werte dann im Speicher des Roboters, genau wie es die Firmware tut.',
   'home.connectFirst': 'Verbinden Sie den Roboter, um zu beginnen.',
-  'home.stored': 'Aktuell im Roboter gespeicherte Werte',
-  'home.storedHint': 'Ein gerade getesteter, noch nicht gespeicherter Wert erscheint hier ebenfalls.',
+  'home.stored': 'Im Roboter gespeicherte Werte',
+  'home.storedHint': 'Das, was im Speicher des Roboters gespeichert ist. Ein gerade getesteter Wert erscheint hier erst, wenn er gespeichert ist.',
   'home.refresh': 'Neu lesen',
   'home.readErrors': 'Werte, die diese Firmware nicht lesen konnte (ältere Version?):',
   'home.notRead': 'Noch nicht gelesen',
