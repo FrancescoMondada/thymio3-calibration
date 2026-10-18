@@ -155,7 +155,7 @@ export default {
   'gyro.s1.text': 'Appoggia il robot su un tavolo stabile. Durante la misura (circa 3 secondi) non toccare né il robot né il tavolo ed evita le vibrazioni.',
   'gyro.s1.tip': 'Il giroscopio misura la velocità di rotazione: a riposo dovrebbe leggere zero. Memorizziamo ciò che legge davvero e lo sottraiamo in seguito.',
   'gyro.s2.title': 'Offset: misurare',
-  'gyro.s2.text': 'Premi Misura, poi salva se i tre valori ti sembrano ragionevoli (numeri piccoli).',
+  'gyro.s2.text': 'Premi «Misura l’offset»: il robot calcola la **media** di una cinquantina di letture del giroscopio (circa mezzo secondo) per ciascuno degli assi x, y e z. La media attenua il rumore di una singola lettura, ma ha senso solo se il robot resta perfettamente fermo: se l’hai toccato, misura di nuovo. Poi salva se i tre valori ti sembrano ragionevoli (numeri piccoli).',
   'gyro.measure': 'Misura l’offset',
   'gyro.offsets': 'Offset misurato (x, y, z)',
   'gyro.rawNow': 'Misura grezza in tempo reale',

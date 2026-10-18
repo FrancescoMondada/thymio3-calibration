@@ -155,7 +155,7 @@ export default {
   'gyro.s1.text': 'Stellen Sie den Roboter flach auf einen stabilen Tisch. Berühren Sie während der Messung (etwa 3 Sekunden) weder den Roboter noch den Tisch und vermeiden Sie Erschütterungen.',
   'gyro.s1.tip': 'Das Gyroskop misst die Drehgeschwindigkeit: In Ruhe sollte es null anzeigen. Wir speichern, was es tatsächlich anzeigt, und ziehen es danach ab.',
   'gyro.s2.title': 'Offsets: messen',
-  'gyro.s2.text': 'Drücken Sie Messen und speichern Sie dann, wenn die drei Werte vernünftig aussehen (kleine Zahlen).',
+  'gyro.s2.text': 'Drücken Sie „Offset messen“: Der Roboter berechnet den **Mittelwert** aus etwa fünfzig Gyroskop-Messwerten (rund eine halbe Sekunde) für jede der Achsen x, y und z. Die Mittelung glättet das Rauschen einer einzelnen Messung, ist aber nur sinnvoll, wenn der Roboter völlig ruhig steht: Wenn Sie ihn berührt haben, messen Sie erneut. Speichern Sie anschließend, wenn die drei Werte vernünftig aussehen (kleine Zahlen).',
   'gyro.measure': 'Offset messen',
   'gyro.offsets': 'Gemessener Offset (x, y, z)',
   'gyro.rawNow': 'Rohmessung live',

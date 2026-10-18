@@ -62,7 +62,8 @@ wizards **start from what the robot already stores** (read when you connect):
 
 - **Straight line / 15 cm**: the correction and the durations start at the stored values.
 - **Ground sensors / colour**: white and black are measured independently; measuring one never touches the other.
-- **Gyroscope offsets**: a new resting measurement (replaces the old one, by nature).
+- **Gyroscope offsets**: a new resting measurement (replaces the old one, by nature): the firmware averages about fifty
+  readings per axis (≈ 0.5 s at 104 Hz), so the robot must stay perfectly still.
 - **Gyroscope rotation scale**: the turn is made with the stored scale and the error you compensate is
   **added** to it, so another turn refines an existing calibration (the menu restarts from the nominal scale).
   This incremental rule is a first-order approximation (the firmware does not document it); it behaved as expected on a real robot.
